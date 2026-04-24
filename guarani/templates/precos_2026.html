@@ -3,117 +3,149 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tabela de Precos 2026 - Guarani</title>
+  <title>Tabela de Preços 2026 — Guarani Sistemas</title>
   <style>
-    :root {
-      color-scheme: light;
-      --bg: #f2f5fb;
-      --card: #ffffff;
-      --line: #e5eaf3;
-      --text: #1a2634;
-      --muted: #607187;
-      --accent: #2f5be7;
-      --accent-soft: #edf2ff;
-      --shadow: 0 10px 30px rgba(31, 54, 102, 0.08);
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 14px;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      padding: 2rem 1.5rem;
     }
-    .container {
-      max-width: 1260px;
-      margin: 0 auto;
-      padding: 28px;
-    }
+
+    .page { max-width: 1100px; margin: 0 auto; }
+
     .header {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 20px 22px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
       display: flex;
-      align-items: flex-start;
+      align-items: flex-end;
       justify-content: space-between;
-      gap: 12px;
       flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 1.5rem;
     }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 1.55rem;
-      letter-spacing: -0.01em;
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
     }
-    .muted {
-      color: var(--muted);
-      margin: 0;
+    .header .sub {
+      font-size: 12px;
+      color: #666;
+      margin-top: 3px;
       line-height: 1.45;
     }
-    .badge {
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1px solid #d7e0ff;
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 0.83rem;
-      font-weight: 600;
-      white-space: nowrap;
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #d8d6ce;
+      border-radius: 8px;
+      padding: 6px 12px;
+      min-width: 240px;
     }
-    .section-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
+    .search-wrap input {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      background: transparent;
+      width: 100%;
+      color: #1a1a1a;
+    }
+    .search-icon { color: #999; font-size: 14px; }
+
+    .secao {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      margin-bottom: 1rem;
       overflow: hidden;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
     }
-    .section-title {
-      margin: 0;
-      padding: 14px 18px;
-      font-size: 1.02rem;
-      font-weight: 700;
-      background: linear-gradient(0deg, #f3f6ff, #f8faff);
-      border-bottom: 1px solid var(--line);
-      color: var(--accent);
+
+    summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      background: #fafaf8;
+      border-bottom: 1px solid #e8e6df;
+      list-style: none;
+      user-select: none;
     }
-    .table-wrap {
-      overflow-x: auto;
+    summary::-webkit-details-marker { display: none; }
+    summary:hover { background: #f0eeea; }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
     }
+    .count {
+      font-size: 11px;
+      color: #888;
+      flex: 1;
+    }
+    .chevron {
+      font-size: 11px;
+      color: #aaa;
+      transition: transform 0.2s;
+    }
+    details[open] .chevron { transform: rotate(180deg); }
+
+    .table-wrap { overflow-x: auto; }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 12.5px;
       min-width: 980px;
     }
-    th, td {
-      border-bottom: 1px solid var(--line);
+    thead th {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
       text-align: left;
-      padding: 11px 12px;
-      vertical-align: top;
-      font-size: 0.9rem;
-      line-height: 1.45;
-    }
-    th {
-      background: #f8faff;
+      border-bottom: 1px solid #eee;
+      background: #fff;
+      white-space: nowrap;
       position: sticky;
       top: 0;
       z-index: 1;
-      color: #32465a;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
     }
-    tbody tr:nth-child(even) {
-      background: #fcfdff;
+    th.r, td.num { text-align: right; }
+
+    tbody tr { border-bottom: 1px solid #f0eeea; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafaf8; }
+
+    td {
+      padding: 9px 12px;
+      color: #1a1a1a;
+      vertical-align: top;
     }
-    tbody tr:hover {
-      background: #f3f7ff;
-    }
+    td.produto { font-weight: 500; min-width: 180px; }
+    td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    td.info { color: #666; font-size: 11.5px; max-width: 320px; line-height: 1.5; }
+
     tr.subtitulo td {
-      font-weight: bold;
+      font-weight: 700;
       color: #2f3f55;
-      background: #f7f9ff !important;
+      background: #f7f9ff;
     }
+
+    .muted { color: #bbb; }
+    .proj { font-style: italic; color: #999; font-size: 11px; }
+
+    tr.hidden { display: none; }
+
     .no-data {
       background: #fff6f6;
       border: 1px solid #ffd8d8;
@@ -122,75 +154,108 @@
       padding: 13px 14px;
       margin-bottom: 16px;
     }
-    .footer-note {
-      color: var(--muted);
-      font-size: 0.84rem;
-      text-align: center;
-      margin-top: 18px;
+
+    footer {
+      margin-top: 2rem;
+      font-size: 11px;
+      color: #aaa;
+      text-align: right;
     }
+
     @media (max-width: 768px) {
-      .container {
-        padding: 16px;
-      }
-      h1 {
-        font-size: 1.3rem;
-      }
-      .header {
-        padding: 16px;
-        border-radius: 14px;
-      }
-      .section-card {
-        border-radius: 14px;
-      }
+      body { padding: 1.25rem 1rem; }
+      .search-wrap { width: 100%; min-width: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h1>Tabela de Precos - Aba 2026</h1>
-        <p class="muted">Origem: {{ planilha_relativa }}</p>
+<div class="page">
+  <div class="header">
+    <div>
+      <h1>Tabela de Preços 2026</h1>
+      <div class="sub">
+        Guarani Sistemas do Brasil · {{ total_itens }} itens · {{ secoes|length }} categorias<br />
+        Origem: {{ planilha_relativa }}
       </div>
-      <div class="badge">{{ total_itens }} itens carregados</div>
     </div>
+    <div class="search-wrap" aria-label="Buscar produto">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="busca" placeholder="Buscar produto..." oninput="filtrar()" {% if erro %}disabled{% endif %} />
+    </div>
+  </div>
 
-    {% if erro %}
-      <div class="no-data">{{ erro }}</div>
-    {% endif %}
+  {% if erro %}
+    <div class="no-data">{{ erro }}</div>
+  {% endif %}
 
+  <div id="conteudo">
     {% for secao in secoes %}
-      <section class="section-card">
-        <h2 class="section-title">{{ secao.titulo }}</h2>
+      {% set paleta = secao.paleta %}
+      <details class="secao" {% if loop.first %}open{% endif %}>
+        <summary style="--fill: {{ paleta.fill }}; --txt: {{ paleta.text }}; --bdr: {{ paleta.border }}">
+          <span class="badge" style="background: {{ paleta.fill }}; color: {{ paleta.text }}; border: 1px solid {{ paleta.border }}">
+            {{ secao.titulo }}
+          </span>
+          <span class="count">{{ secao.itens|length }} item{% if secao.itens|length != 1 %}s{% endif %}</span>
+          <span class="chevron">▼</span>
+        </summary>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Produto</th>
-                <th>Qtde</th>
-                <th>CDU/Setup</th>
-                <th>Horas</th>
-                <th>Mensalidade</th>
+                <th class="r">Qtd</th>
+                <th class="r">CDU / Setup</th>
+                <th class="r">Horas</th>
+                <th class="r">Mensalidade</th>
                 <th>Informativo</th>
               </tr>
             </thead>
             <tbody>
               {% for item in secao.itens %}
-                <tr class="{{ 'subtitulo' if item.tipo == 'subtitulo' else '' }}">
-                  <td>{{ item.produto }}</td>
-                  <td>{{ item.qtde }}</td>
-                  <td>{{ item.cdu_setup }}</td>
-                  <td>{{ item.horas }}</td>
-                  <td>{{ item.mensalidade }}</td>
-                  <td>{{ item.informativo }}</td>
-                </tr>
+                {% if item.is_subtitulo %}
+                  <tr class="subtitulo">
+                    <td colspan="6">{{ item.produto_html }}</td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td class="produto">{{ item.produto_html }}</td>
+                    <td class="num">{{ item.qtde_html }}</td>
+                    <td class="num">{{ item.setup_html }}</td>
+                    <td class="num">{{ item.horas_html }}</td>
+                    <td class="num">{{ item.mensalidade_html }}</td>
+                    <td class="info">{{ item.info_html }}</td>
+                  </tr>
+                {% endif %}
               {% endfor %}
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
     {% endfor %}
-    <p class="footer-note">Visual gerado automaticamente a partir da planilha de precos 2026.</p>
   </div>
+
+  <footer>Gerado automaticamente a partir da planilha · Flask</footer>
+</div>
+
+<script>
+function filtrar() {
+  const input = document.getElementById("busca");
+  if (!input || input.disabled) return;
+
+  const q = input.value.toLowerCase().trim();
+  document.querySelectorAll(".secao").forEach((sec) => {
+    let visiveis = 0;
+    sec.querySelectorAll("tbody tr").forEach((tr) => {
+      const txt = tr.textContent.toLowerCase();
+      const esconder = q && !txt.includes(q);
+      tr.classList.toggle("hidden", esconder);
+      if (!esconder) visiveis++;
+    });
+    sec.style.display = q && visiveis === 0 ? "none" : "";
+    if (q && visiveis > 0) sec.open = true;
+  });
+}
+</script>
 </body>
 </html>
