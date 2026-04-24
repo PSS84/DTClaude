@@ -1,0 +1,7 @@
+# Documentacao local (nao versionar)
+/README.md
+/manual/README.md
+
+# Artefatos locais comuns
+__pycache__/
+*.pyc
