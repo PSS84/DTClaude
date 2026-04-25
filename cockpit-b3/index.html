@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cockpit B3 — Operacional Diário</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #ebebea;
+    --text: #1a1a19; --text2: #6b6b68; --text3: #9b9b98;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --green-bg: #EAF3DE; --green-text: #3B6D11;
+    --red-bg: #FCEBEB; --red-text: #A32D2D;
+    --amber-bg: #FAEEDA; --amber-text: #854F0B;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --bg2: #242422; --bg3: #2e2e2c;
+      --text: #f0f0ee; --text2: #a0a09e; --text3: #6b6b68;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --green-bg: #173404; --green-text: #97C459;
+      --red-bg: #501313; --red-text: #F09595;
+      --amber-bg: #412402; --amber-text: #FAC775;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 2rem 1.5rem;
+    max-width: 900px; margin: 0 auto; line-height: 1.5;
+  }
+  h1 { font-size: 17px; font-weight: 500; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
+  .date { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .badge-idle { background: var(--bg3); color: var(--text2); border: 0.5px solid var(--border); }
+  .badge-running { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-done { background: var(--green-bg); color: var(--green-text); }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+  textarea {
+    width: 100%; padding: 10px; font-size: 13px; font-family: inherit;
+    resize: vertical; min-height: 120px; color: var(--text);
+    background: var(--bg); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); line-height: 1.6;
+  }
+  textarea:focus { outline: none; border-color: var(--text3); }
+  .spots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 0.5rem; }
+  @media (max-width: 600px) { .spots-grid { grid-template-columns: 1fr 1fr; } }
+  .spot-field { display: flex; flex-direction: column; gap: 4px; }
+  .spot-field label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .spot-field input {
+    padding: 7px 10px; font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    background: var(--bg); color: var(--text);
+  }
+  .spot-field input:focus { outline: none; border-color: var(--text3); }
+  .btn-primary {
+    width: 100%; padding: 11px; font-size: 14px; font-weight: 500;
+    background: var(--text); color: var(--bg); border: none;
+    border-radius: var(--radius); cursor: pointer; margin-top: 1.25rem;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-sec {
+    padding: 6px 14px; font-size: 12px; font-weight: 500;
+    background: transparent; color: var(--text2);
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .btn-sec:hover { background: var(--bg2); }
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 1.5rem 0; }
+  .tabs { display: flex; gap: 4px; border-bottom: 0.5px solid var(--border); margin-bottom: 1rem; }
+  .tab {
+    padding: 8px 16px; font-size: 13px; color: var(--text2);
+    border: none; background: transparent; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -0.5px;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .card { background: var(--bg2); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .output-text { font-size: 13px; line-height: 1.8; color: var(--text2); white-space: pre-wrap; }
+  .vies-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 1.5rem; padding: 12px 14px;
+    background: var(--bg2); border-radius: var(--radius);
+  }
+  .vies-label { font-size: 12px; color: var(--text2); }
+  .vies-pill { padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .v-alta { background: var(--green-bg); color: var(--green-text); }
+  .v-baixa { background: var(--red-bg); color: var(--red-text); }
+  .v-neutro { background: var(--bg3); color: var(--text2); border: 0.5px solid var(--border); }
+  .step {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px; padding: 10px 12px;
+    background: var(--bg); border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--bg3); display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 500;
+    flex-shrink: 0; color: var(--text2);
+  }
+  .step-num.done { background: var(--green-bg); color: var(--green-text); }
+  .step-num.running { background: var(--amber-bg); color: var(--amber-text); }
+  .step-title { font-size: 13px; font-weight: 500; }
+  .step-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 13px; line-height: 1.8; }
+  .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  footer { font-size: 11px; color: var(--text3); text-align: right; margin-top: 2.5rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Cockpit B3 — Operacional Diário</h1>
+    <p class="date" id="data-hoje"></p>
+  </div>
+  <span class="badge badge-idle" id="status-badge">aguardando</span>
+</div>
+
+<div class="grid2">
+  <div>
+    <p class="section-label">Briefing do dia</p>
+    <textarea id="briefing" placeholder="Cole o briefing do BDM Online ou qualquer resumo — câmbio, juros, petróleo, Fed, Copom, dados macro..."></textarea>
+  </div>
+  <div>
+    <p class="section-label">Contexto adicional / calendário</p>
+    <textarea id="contexto" placeholder="Seus comentários, eventos do calendário econômico, viés próprio, ou perguntas específicas para os agentes..."></textarea>
+  </div>
+</div>
+
+<hr>
+
+<p class="section-label">Cotações de referência</p>
+<div class="spots-grid">
+  <div class="spot-field"><label>WDO (pts)</label><input type="text" id="wdo" placeholder="ex: 5.742,5"></div>
+  <div class="spot-field"><label>WIN (pts)</label><input type="text" id="win" placeholder="ex: 130.450"></div>
+  <div class="spot-field"><label>BIT (USD)</label><input type="text" id="bit" placeholder="ex: 67.200"></div>
+  <div class="spot-field"><label>DXY</label><input type="text" id="dxy" placeholder="ex: 104,2"></div>
+  <div class="spot-field"><label>Petróleo (USD)</label><input type="text" id="oil" placeholder="ex: 82,40"></div>
+  <div class="spot-field"><label>PTAX anterior</label><input type="text" id="ptax" placeholder="ex: 5,7318"></div>
+</div>
+
+<button class="btn-primary" id="btn-analisar" onclick="iniciarAnalise()">
+  Analisar e gerar operacional do dia
+</button>
+
+<hr>
+
+<div id="resultado-area">
+  <div class="empty">
+    Preencha o briefing e as cotações,<br>
+    depois clique em <strong>Analisar</strong> para gerar o operacional do dia.
+  </div>
+</div>
+
+<footer>v1.0 — WDO · WIN · BIT — B3 Day Trading Cockpit</footer>
+
+<script>
+  document.getElementById('data-hoje').textContent = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+  });
+
+  function setBadge(txt, cls) {
+    const b = document.getElementById('status-badge');
+    b.textContent = txt;
+    b.className = 'badge ' + cls;
+  }
+
+  function getInputs() {
+    return {
+      briefing: document.getElementById('briefing').value.trim(),
+      contexto: document.getElementById('contexto').value.trim(),
+      spots: ['wdo','win','bit','dxy','oil','ptax'].reduce((acc, id) => {
+        const v = document.getElementById(id).value.trim();
+        if (v) acc[id.toUpperCase()] = v;
+        return acc;
+      }, {})
+    };
+  }
+
+  async function claude(system, user) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system,
+        messages: [{ role: 'user', content: user }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.content?.map(b => b.text || '').join('') || '';
+  }
+
+  function setStep(n, state, desc) {
+    const el = document.getElementById('s' + n);
+    if (!el) return;
+    el.className = 'step-num ' + state;
+    el.textContent = state === 'done' ? '✓' : n;
+    const d = document.getElementById('sd' + n);
+    if (d && desc) d.textContent = desc;
+  }
+
+  async function iniciarAnalise() {
+    const inp = getInputs();
+    if (!inp.briefing && !inp.contexto) {
+      alert('Insira ao menos o briefing do dia ou contexto adicional.');
+      return;
+    }
+
+    document.getElementById('btn-analisar').disabled = true;
+    setBadge('analisando...', 'badge-running');
+
+    const spotsStr = Object.entries(inp.spots).map(([k,v]) => k + ': ' + v).join(' | ') || 'não informadas';
+
+    document.getElementById('resultado-area').innerHTML = `
+      <div class="step"><div class="step-num running" id="s1">1</div><div><div class="step-title">Agente Macro</div><div class="step-desc" id="sd1">Analisando contexto macro — câmbio, juros, commodities...</div></div></div>
+      <div class="step"><div class="step-num" id="s2">2</div><div><div class="step-title">Agente de Viés</div><div class="step-desc" id="sd2">Aguardando análise macro...</div></div></div>
+      <div class="step"><div class="step-num" id="s3">3</div><div><div class="step-title">Agente Operacional</div><div class="step-desc" id="sd3">Aguardando definição de viés...</div></div></div>
+    `;
+
+    try {
+      const macro = await claude(
+        'Você é analista macro especialista em mercado brasileiro (B3). Responda em português brasileiro. Conciso, máx 200 palavras, use tópicos curtos.',
+        `Analise o contexto macro para day trading no Brasil hoje.\n\nBRIEFING:\n${inp.briefing || '(não fornecido)'}\n\nCOTAÇÕES: ${spotsStr}\n\nContexto: ${inp.contexto || 'nenhum'}\n\nResponda com:\n1. CENÁRIO MACRO GERAL (2-3 linhas)\n2. FATORES DE RISCO DO DIA (bullets)\n3. DRIVERS PARA ACOMPANHAR`
+      );
+      setStep(1, 'done', 'Concluído');
+      setStep(2, 'running', 'Determinando viés por ativo...');
+
+      const vies = await claude(
+        'Você é trader especialista em futuros da B3 (WDO, WIN, BIT). Responda em português brasileiro. Direto e objetivo, máx 250 palavras.',
+        `Com base na análise macro e cotações, determine o viés operacional para hoje.\n\nMACRO:\n${macro}\n\nCOTAÇÕES: ${spotsStr}\n\nResponda EXATAMENTE neste formato:\n\nWDO: [ALTA/BAIXA/NEUTRO] — [motivo em 1 linha]\nWIN: [ALTA/BAIXA/NEUTRO] — [motivo em 1 linha]\nBIT: [ALTA/BAIXA/NEUTRO] — [motivo em 1 linha]\n\nNÍVEIS-CHAVE:\n• WDO: suporte [valor] | resistência [valor]\n• WIN: suporte [valor] | resistência [valor]\n• BIT: suporte [valor] | resistência [valor]\n\nALERTA DO DIA: [1 linha sobre o principal risco]`
+      );
+      setStep(2, 'done', 'Concluído');
+      setStep(3, 'running', 'Montando plano de setups...');
+
+      const operacional = await claude(
+        'Você é trader operacional experiente em futuros da B3. Monte planos de trade claros e práticos. Responda em português brasileiro. Máx 300 palavras. Foque em probabilidade e gestão.',
+        `Monte o plano operacional do dia com base em:\n\nVIÉS:\n${vies}\n\nCOTAÇÕES: ${spotsStr}\n\nContexto trader: ${inp.contexto || 'day trader B3, WDO e WIN'}\n\nResponda com:\n\nSETUPS PRIORITÁRIOS (2-3 por ativo principal):\n— Nome do setup\n— Gatilho de entrada\n— Stop sugerido\n— Alvo mínimo / alvo estendido\n\nCENÁRIO ALTERNATIVO: o que invalida o viés principal\n\nGESTÃO DO DIA: observações sobre tamanho de posição ou horários críticos`
+      );
+      setStep(3, 'done', 'Concluído');
+
+      renderResultados(macro, vies, operacional);
+      setBadge('operacional pronto', 'badge-done');
+
+    } catch(e) {
+      document.getElementById('resultado-area').innerHTML = `
+        <div class="card">
+          <p class="output-text" style="color:var(--red-text)">Erro: ${escHtml(e.message)}</p>
+        </div>`;
+      setBadge('erro', 'badge-idle');
+    }
+
+    document.getElementById('btn-analisar').disabled = false;
+  }
+
+  function detectarVies(texto, ativo) {
+    const upper = texto.toUpperCase();
+    const idx = upper.indexOf(ativo + ':');
+    if (idx === -1) return 'NEUTRO';
+    const trecho = upper.slice(idx, idx + 30);
+    if (trecho.includes('ALTA')) return 'ALTA';
+    if (trecho.includes('BAIXA')) return 'BAIXA';
+    return 'NEUTRO';
+  }
+
+  function viesPill(v) {
+    const cls = v === 'ALTA' ? 'v-alta' : v === 'BAIXA' ? 'v-baixa' : 'v-neutro';
+    return `<span class="vies-pill ${cls}">${v}</span>`;
+  }
+
+  function renderResultados(macro, vies, operacional) {
+    const wdo = detectarVies(vies, 'WDO');
+    const win = detectarVies(vies, 'WIN');
+    const bit = detectarVies(vies, 'BIT');
+
+    document.getElementById('resultado-area').innerHTML = `
+      <div class="vies-row">
+        <span class="vies-label">Viés do dia —</span>
+        <span class="vies-label">WDO</span>${viesPill(wdo)}
+        <span class="vies-label" style="margin-left:4px;">WIN</span>${viesPill(win)}
+        <span class="vies-label" style="margin-left:4px;">BIT</span>${viesPill(bit)}
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('macro', this)">Macro</button>
+        <button class="tab" onclick="switchTab('vies', this)">Viés e níveis</button>
+        <button class="tab" onclick="switchTab('op', this)">Setups</button>
+      </div>
+
+      <div id="tab-macro" class="tab-content active">
+        <div class="card"><p class="output-text">${escHtml(macro)}</p></div>
+      </div>
+      <div id="tab-vies" class="tab-content">
+        <div class="card"><p class="output-text">${escHtml(vies)}</p></div>
+      </div>
+      <div id="tab-op" class="tab-content">
+        <div class="card"><p class="output-text">${escHtml(operacional)}</p></div>
+      </div>
+    `;
+  }
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
