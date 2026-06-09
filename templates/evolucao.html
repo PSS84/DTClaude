@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Executivo — Paulo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f8fafc;color:#111827;font-family:'Segoe UI',system-ui,sans-serif;font-size:13px}
+header{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 28px;
+        display:flex;justify-content:space-between;align-items:center}
+.avatar{width:38px;height:38px;border-radius:50%;background:#2563eb;color:#fff;
+         font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.wrap{max-width:1440px;margin:0 auto;padding:18px 28px}
+.kpi-strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;margin-top:16px;margin-bottom:14px;align-items:stretch}
+.kpi-card{display:flex;flex-direction:column;min-width:0;padding:10px 11px;min-height:168px}
+.kpi-card .kval{font-size:15px;font-weight:700;line-height:1.2;margin-bottom:2px}
+.kpi-card .ksub{font-size:9px;margin-bottom:6px;color:#6b7280;line-height:1.35;min-height:24px}
+.kpi-body{flex:1;display:flex;flex-direction:column;gap:3px;font-size:9px}
+.kpi-foot{margin-top:auto;padding-top:6px;border-top:1px solid #f3f4f6}
+.kpi-row{display:flex;justify-content:space-between;align-items:center;font-size:9px;line-height:1.5}
+.kpi-row-lbl{color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:4px}
+.kpi-row-val{font-weight:600;color:#374151;white-space:nowrap}
+.kpi-row-pct{color:#9ca3af;font-weight:400;margin-left:3px}
+.kpi-bar{background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden}
+.kpi-bar-fill{height:100%;border-radius:3px}
+.score-mini{margin-bottom:2px}
+.score-mini-lbl{display:flex;justify-content:space-between;font-size:8px;color:#6b7280;margin-bottom:1px}
+.score-mini-bar{background:#dbeafe;border-radius:2px;height:3px;overflow:hidden}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px}
+.card h2,.kpi-card h2{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#9ca3af;margin-bottom:6px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kval{font-size:18px;font-weight:700;line-height:1.2;color:#111827}
+.ksub{font-size:10px;margin-top:3px;color:#6b7280}
+.up{color:#16a34a}.dn{color:#dc2626}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.sec{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af;
+      font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f3f4f6}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;
+    letter-spacing:.6px;color:#9ca3af;border-bottom:2px solid #f3f4f6;font-weight:600}
+td{padding:7px 10px;border-bottom:1px solid #f9fafb}
+tr:hover td{background:#fafafa}
+.rm{display:flex;justify-content:space-between;position:relative;padding-top:36px}
+.rm::before{content:'';position:absolute;top:46px;left:6%;right:6%;height:2px;background:#e5e7eb}
+.rmi{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;position:relative}
+.rmd{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+       font-size:14px;border:2px solid #fff;box-shadow:0 0 0 2px #e5e7eb;background:#fff;z-index:1}
+.rmy{font-size:10px;font-weight:700;color:#9ca3af}
+.rmt{font-size:11px;font-weight:600;color:#111827;text-align:center}
+.rms{font-size:10px;color:#6b7280;text-align:center;line-height:1.4}
+.acao{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f9fafb;align-items:flex-start}
+.acao:last-child{border:none}
+.anum{width:22px;height:22px;min-width:22px;border-radius:50%;background:#eff6ff;color:#2563eb;
+       font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.acao h4{font-size:12px;font-weight:600;margin-bottom:1px}
+.acao span{font-size:11px;color:#6b7280}
+footer{background:#fff;border-top:1px solid #e5e7eb;padding:10px 28px;
+        display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af}
+.btn{background:#2563eb;color:#fff;border:none;border-radius:7px;
+      padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer}
+.pbar-wrap{margin-bottom:8px}
+.pbar-lbl{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.pbar{background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden;margin-bottom:2px}
+.pfill{height:100%;border-radius:3px}
+canvas{max-height:200px}
+#selMes{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:6px 14px;
+         font-size:13px;color:#374151;font-weight:500;cursor:pointer;outline:none}
+#selMes:hover{border-color:#2563eb}
+.status-banner{width:100%;border-bottom:1px solid rgba(0,0,0,.08)}
+.status-banner.status-ok{background:linear-gradient(90deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);color:#fff}
+.status-banner.status-alerta{background:linear-gradient(90deg,#7f1d1d 0%,#dc2626 55%,#ef4444 100%);color:#fff}
+.status-inner{max-width:1440px;margin:0 auto;padding:12px 28px}
+.status-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:10px}
+.status-icon{font-size:22px;font-weight:700;line-height:1;opacity:.95;flex-shrink:0;margin-top:1px}
+.status-titulo{font-size:14px;font-weight:700;margin-bottom:2px}
+.status-msg{font-size:12px;opacity:.92;line-height:1.4}
+.status-checklist{display:flex;flex-wrap:wrap;gap:12px 20px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2)}
+.status-topic{flex:1;min-width:155px}
+.status-topic-title{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;opacity:.7;margin-bottom:5px}
+.status-item{display:flex;gap:5px;align-items:flex-start;font-size:10px;line-height:1.45;margin-bottom:3px;opacity:.95}
+.status-ic{font-weight:700;flex-shrink:0;width:11px}
+.status-item.ok .status-ic{color:#bbf7d0}
+.status-item.alerta .status-ic{color:#fecaca}
+.status-lbl{flex:1}
+.status-detail{display:block;opacity:.75;font-size:9px;margin-top:1px}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="avatar">PO</div>
+    <div>
+      <div style="font-size:15px;font-weight:700">Paulo Souza &nbsp;<span style="font-size:12px;color:#9ca3af;font-weight:400">Plano 5 Anos</span></div>
+      <div style="font-size:11px;color:#6b7280">Dashboard Executivo &mdash; Visao geral da sua evolucao financeira</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <select id="selMes" onchange="applyMes(+this.value)" title="Selecionar mes de analise">
+      <option value="1">January / 2026</option><option value="2">February / 2026</option><option value="3">March / 2026</option><option value="5">May / 2026</option><option value="6" selected>June / 2026</option><option value="7">July / 2026</option><option value="8">August / 2026</option><option value="9">September / 2026</option><option value="10">October / 2026</option><option value="11">November / 2026</option><option value="12">December / 2026</option>
+    </select>
+  </div>
+</header>
+
+<div id="statusBanner" class="status-banner status-alerta">
+  <div class="status-inner">
+    <div class="status-head">
+      <span id="statusIcon" class="status-icon">⚠</span>
+      <div>
+        <div id="statusTitulo" class="status-titulo">Atencao — fora do planejado</div>
+        <div id="statusMsg" class="status-msg">4 de 9 indicadores ok — revise os topicos abaixo.</div>
+      </div>
+    </div>
+    <div id="statusChecklist"><div class="status-checklist"><div class="status-topic"><div class="status-topic-title">Receita</div><div class="status-item ok"><span class="status-ic">✓</span><span class="status-lbl">Receita liquida do mes<span class="status-detail">R$ 13.225</span></span></div><div class="status-item alerta"><span class="status-ic">✗</span><span class="status-lbl">Receita extra (DT + Outros)<span class="status-detail">DT R$ -36.978 + Outros R$ 11.042</span></span></div></div><div class="status-topic"><div class="status-topic-title">Custos</div><div class="status-item alerta"><span class="status-ic">✗</span><span class="status-lbl">Custo de vida do mes ate R$ 5.000<span class="status-detail">R$ 7.326</span></span></div></div><div class="status-topic"><div class="status-topic-title">Divida e fluxo</div><div class="status-item ok"><span class="status-ic">✓</span><span class="status-lbl">Sobra apos divida e investimento<span class="status-detail">Fluxo R$ 0</span></span></div><div class="status-item alerta"><span class="status-ic">✗</span><span class="status-lbl">Saldo apos custo e divida (planilha)<span class="status-detail">R$ -3</span></span></div></div><div class="status-topic"><div class="status-topic-title">Investimento</div><div class="status-item alerta"><span class="status-ic">✗</span><span class="status-lbl">Aporte no mes<span class="status-detail">R$ -3 / meta R$ 3.000</span></span></div></div><div class="status-topic"><div class="status-topic-title">Evolucao</div><div class="status-item alerta"><span class="status-ic">✗</span><span class="status-lbl">Crescimento patrimonial (+3%)<span class="status-detail">-13.8% / meta +3%</span></span></div><div class="status-item ok"><span class="status-ic">✓</span><span class="status-lbl">Score financeiro<span class="status-detail">58/100</span></span></div><div class="status-item ok"><span class="status-ic">✓</span><span class="status-lbl">DT operacional (nova fase)<span class="status-detail">Acumulado R$ 7.338</span></span></div></div></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<div class="kpi-strip">
+
+  <div class="card kpi-card">
+    <h2>Patrimonio Liquido</h2>
+    <div class="kval" id="kpiPat">R$&nbsp;12.411</div>
+    <div class="ksub dn" id="kpiPatSaldo">Saldo: R$&nbsp;-49.626</div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">% do PNIF</span><span id="kpiPnifPct" class="kpi-row-val">1.2%</span></div>
+      <div class="kpi-bar"><div id="kpiPnifBar" class="kpi-bar-fill" style="width:1.2%;background:#2563eb"></div></div>
+      <div style="font-size:8px;color:#9ca3af;font-weight:600;margin:6px 0 3px;text-transform:uppercase;letter-spacing:.5px">Bens</div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Carro</span><span class="kpi-row-val">R$&nbsp;104.000</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Casa</span><span class="kpi-row-val">R$&nbsp;230.000</span></div>
+    </div>
+    <div class="kpi-foot" style="font-size:8px;color:#9ca3af;line-height:1.4">
+      <div class="kpi-row"><span class="kpi-row-lbl">Cresc. mensal</span>
+      <span id="kpiCrescLbl" style="font-weight:700;color:#dc2626">-13.8%<span style="color:#9ca3af;font-weight:400"> / +3%</span></span></div>
+      <div class="kpi-bar" style="margin:3px 0"><div id="kpiCrescBar" class="kpi-bar-fill" style="width:0%;background:#dc2626"></div></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Meta</span><span id="kpiAlvo" class="kpi-row-val">R$&nbsp;34.884</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">vs meta</span><span id="kpiGapMeta" class="kpi-row-val" style="color:#dc2626">R$&nbsp;-5.682</span></div>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <h2>Divida Total</h2>
+    <div class="kval dn">R$&nbsp;62.037</div>
+    <div class="ksub dn">▲ 499.8% vs patrimonio</div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">Divida bancaria</span><span class="kpi-row-val" style="color:#dc2626">R$&nbsp;26.429</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Divida emocional</span><span class="kpi-row-val" style="color:#d97706">R$&nbsp;35.608</span></div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:43%;background:#dc2626"></div></div>
+    </div>
+    <div class="kpi-foot" style="font-size:8px;color:#9ca3af">Bradesco R$&nbsp;4.469/mes &bull; Quitacao prev.: jan/2027</div>
+  </div>
+
+  <div class="card kpi-card">
+    <h2>Custo de Vida (media)</h2>
+    <div class="kval dn" id="kpiCusto">R$&nbsp;7.326</div>
+    <div class="ksub" id="kpiCustoSub">Meta R$ 5.000 &nbsp;|&nbsp; <span class="dn">Acima R$2,326</span></div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">Atingimento</span><span id="kpiCustoPctLbl" class="kpi-row-val">68%</span></div>
+      <div class="kpi-bar"><div id="kpiCustoBar" class="kpi-bar-fill" style="width:68%;background:#d97706"></div></div>
+    </div>
+    <div class="kpi-foot kpi-row" style="border-top:1px solid #e5e7eb;margin-top:4px;padding-top:4px">
+      <span class="kpi-row-lbl">Mês atual</span>
+      <span id="kpiCustoMesAtual" class="kpi-row-val" style="color:#dc2626;font-weight:600">R$&nbsp;7.326</span>
+    </div>
+    <div class="kpi-foot" style="font-size:8px;color:#9ca3af">Media Jun ate mes selecionado</div>
+  </div>
+
+  <div class="card kpi-card">
+    <h2>Receita Base</h2>
+    <div class="kval" style="color:#7c3aed">R$&nbsp;4.497</div>
+    <div class="ksub">Sal + Vale20 + VA</div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">Salario</span><span class="kpi-row-val">R$&nbsp;2.206<span class="kpi-row-pct">49%</span></span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Vale dia 20</span><span class="kpi-row-val">R$&nbsp;1.587<span class="kpi-row-pct">35%</span></span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Vale Alim.</span><span class="kpi-row-val">R$&nbsp;704<span class="kpi-row-pct">16%</span></span></div>
+    </div>
+    <div style="font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 3px">Salário Bruto</div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">Salário</span><span id="benSalario" class="kpi-row-val">R$&nbsp;5.557</span></div>
+    </div>
+    <div style="font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 3px">Benefícios</div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">FGTS</span><span id="benFgts" class="kpi-row-val">R$&nbsp;544</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Plano Saúde</span><span id="benPlano" class="kpi-row-val">R$&nbsp;645</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">13º</span><span id="benDec" class="kpi-row-val">R$&nbsp;6.626</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">Férias</span><span id="benFerias" class="kpi-row-val">R$&nbsp;8.460</span></div>
+      <div class="kpi-row"><span class="kpi-row-lbl">INSS</span><span id="benInss" class="kpi-row-val">R$&nbsp;597</span></div>
+    </div>
+    <div class="kpi-foot kpi-row" style="border-top:1px solid #e5e7eb;margin-top:4px;padding-top:4px">
+      <span class="kpi-row-lbl" style="font-weight:600">Total benef.</span>
+      <span id="benTotal" class="kpi-row-val" style="color:#7c3aed;font-weight:700">R$&nbsp;16.872</span>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <h2>Receita Extra</h2>
+    <div class="kval" id="kpiExtra" style="color:#dc2626">R$&nbsp;-25.936</div>
+    <div class="ksub">DT + Outros (Despesas)</div>
+    <div class="kpi-body" id="kpiExtraRows"><div class="kpi-row"><span class="kpi-row-lbl">DT</span><span class="kpi-row-val" style="color:#dc2626">R$&nbsp;-36.978<span class="kpi-row-pct">77%</span></span></div><div class="kpi-row"><span class="kpi-row-lbl">Outros</span><span class="kpi-row-val" style="color:#16a34a">+R$&nbsp;11.042<span class="kpi-row-pct">23%</span></span></div></div>
+    <div style="border-top:1px dashed #d1d5db;margin:8px 0 6px"></div>
+    <div style="font-size:9px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Renda Extra — <span id="kpiExtraAntLabel">May/2026</span></div>
+    <div class="kpi-body" id="kpiExtraAntRows"><div class="kpi-row"><span class="kpi-row-lbl">DT</span><span class="kpi-row-val" style="color:#16a34a">+R$&nbsp;13.070<span class="kpi-row-pct">42%</span></span></div><div class="kpi-row"><span class="kpi-row-lbl">Outros</span><span class="kpi-row-val" style="color:#16a34a">+R$&nbsp;17.925<span class="kpi-row-pct">58%</span></span></div></div>
+  </div>
+
+  <div class="card kpi-card" style="background:#eff6ff;border-color:#bfdbfe">
+    <h2>Score Financeiro</h2>
+    <div style="display:flex;align-items:baseline;gap:3px;margin-bottom:4px">
+      <span id="kpiScore" class="kval" style="font-size:20px;color:#d97706">58</span>
+      <span style="font-size:10px;color:#9ca3af">/100</span>
+      <span id="kpiScoreLbl" style="font-size:9px;color:#d97706">Atencao</span>
+    </div>
+    <div id="scoreBars" class="kpi-body"><div class="score-mini"><div class="score-mini-lbl"><span>Saldo liquido</span><span style="font-weight:600;color:#374151">20%</span></div><div class="score-mini-bar"><div style="width:20%;height:100%;background:#dc2626;border-radius:2px"></div></div></div><div class="score-mini"><div class="score-mini-lbl"><span>Custo de vida</span><span style="font-weight:600;color:#374151">68%</span></div><div class="score-mini-bar"><div style="width:68%;height:100%;background:#2563eb;border-radius:2px"></div></div></div><div class="score-mini"><div class="score-mini-lbl"><span>Patrimonio</span><span style="font-weight:600;color:#374151">59%</span></div><div class="score-mini-bar"><div style="width:59%;height:100%;background:#d97706;border-radius:2px"></div></div></div><div class="score-mini"><div class="score-mini-lbl"><span>Pagou divida</span><span style="font-weight:600;color:#374151">94%</span></div><div class="score-mini-bar"><div style="width:94%;height:100%;background:#16a34a;border-radius:2px"></div></div></div><div class="score-mini"><div class="score-mini-lbl"><span>Investiu</span><span style="font-weight:600;color:#374151">0%</span></div><div class="score-mini-bar"><div style="width:-0%;height:100%;background:#dc2626;border-radius:2px"></div></div></div><div class="score-mini"><div class="score-mini-lbl"><span>Fluxo positivo</span><span style="font-weight:600;color:#374151">100%</span></div><div class="score-mini-bar"><div style="width:100%;height:100%;background:#16a34a;border-radius:2px"></div></div></div></div>
+  </div>
+
+  <div class="card kpi-card">
+    <h2>Saldo do Mes</h2>
+    <div class="kval" id="kpiSaldoMes" style="color:#dc2626">R$&nbsp;-3</div>
+    <div class="ksub">Receita menos custo de vida</div>
+    <div class="kpi-body">
+      <div class="kpi-row"><span class="kpi-row-lbl">Alocado</span><span id="kpiAlocLbl" class="kpi-row-val">R$&nbsp;5.898</span></div>
+      <div class="kpi-bar"><div id="kpiAlocBar" class="kpi-bar-fill" style="width:0%;background:#2563eb"></div></div>
+    </div>
+    <div class="kpi-foot kpi-row">
+      <span class="kpi-row-lbl">Sobra</span>
+      <span id="kpiSobra" class="kpi-row-val" style="color:#16a34a;font-size:11px">+R$&nbsp;0</span>
+    </div>
+  </div>
+
+  <div class="card kpi-card">
+    <h2>Carteira</h2>
+    <div class="kval" style="color:#0369a1">R$&nbsp;16.790</div>
+    <div class="ksub">Contas correntes</div>
+    <div class="kpi-body"><div class="kpi-row" style="margin-bottom:2px"><span class="kpi-row-lbl">Brasil</span><span class="kpi-row-val" style="color:#374151">R$&nbsp;13.550<span class="kpi-row-pct">81%</span></span></div><div class="kpi-bar" style="margin-bottom:4px"><div class="kpi-bar-fill" style="width:81%;background:#2563eb"></div></div><div class="kpi-row" style="margin-bottom:2px"><span class="kpi-row-lbl">XP1</span><span class="kpi-row-val" style="color:#374151">R$&nbsp;1.880<span class="kpi-row-pct">11%</span></span></div><div class="kpi-bar" style="margin-bottom:4px"><div class="kpi-bar-fill" style="width:11%;background:#7c3aed"></div></div><div class="kpi-row" style="margin-bottom:2px"><span class="kpi-row-lbl">XP2</span><span class="kpi-row-val" style="color:#9ca3af">R$&nbsp;-<span class="kpi-row-pct">0%</span></span></div><div class="kpi-bar" style="margin-bottom:4px"><div class="kpi-bar-fill" style="width:0%;background:#a855f7"></div></div><div class="kpi-row" style="margin-bottom:2px"><span class="kpi-row-lbl">Inter</span><span class="kpi-row-val" style="color:#374151">R$&nbsp;1.360<span class="kpi-row-pct">8%</span></span></div><div class="kpi-bar" style="margin-bottom:4px"><div class="kpi-bar-fill" style="width:8%;background:#16a34a"></div></div><div class="kpi-row" style="margin-bottom:2px"><span class="kpi-row-lbl">Bradesco</span><span class="kpi-row-val" style="color:#9ca3af">R$&nbsp;-<span class="kpi-row-pct">0%</span></span></div><div class="kpi-bar" style="margin-bottom:4px"><div class="kpi-bar-fill" style="width:0%;background:#d97706"></div></div><div class="kpi-row" style="margin-bottom:2px"><span class="kpi-row-lbl">BTG2</span><span class="kpi-row-val" style="color:#9ca3af">R$&nbsp;-<span class="kpi-row-pct">0%</span></span></div><div class="kpi-bar" style="margin-bottom:4px"><div class="kpi-bar-fill" style="width:0%;background:#0369a1"></div></div></div>
+    <div class="kpi-foot" style="font-size:8px;color:#9ca3af">BTG1: <strong>R$&nbsp;11.462</strong></div>
+  </div>
+</div>
+
+<div id="insightsRow" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px"><div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">⚠</span><span style="font-size:12px;color:#374151;line-height:1.5">DT na receita liquida: R$ -36.978 em June.</span></div><div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">💡</span><span style="font-size:12px;color:#374151;line-height:1.5">Corte de R$ 2.829 nas variaveis fecha o teto salario (R$ 4.497).</span></div><div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">⚠</span><span style="font-size:12px;color:#374151;line-height:1.5">Historico DT 2026 (antes 08/06): R$ -157.261.</span></div><div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">⚠</span><span style="font-size:12px;color:#374151;line-height:1.5">Patrimonio caiu -13.8% vs mes anterior.</span></div><div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">💡</span><span style="font-size:12px;color:#374151;line-height:1.5">Investimento R$ -3 abaixo da meta R$ 3.000.</span></div></div>
+
+<div class="g21">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div>
+        <div class="sec" style="margin:0 0 2px;border:none;padding:0">Evolucao Patrimonial</div>
+        <div style="font-size:11px;color:#9ca3af">Historico real + projecao 5 anos</div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;text-align:right">
+        Atual: <strong id="evPatLbl">R$&nbsp;12.411</strong><br>
+        Meta: <strong style="color:#d97706">R$&nbsp;674.550</strong>
+      </div>
+    </div>
+    <canvas id="cEv" style="max-height:240px"></canvas>
+    <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:#6b7280;flex-wrap:wrap">
+      <span><span style="display:inline-block;width:14px;height:3px;background:#2563eb;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Historico Real</span>
+      <span><span style="display:inline-block;width:14px;height:3px;background:#16a34a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Projecao (comissao R$5k + fonte R$1.5k)</span>
+      <span><span style="display:inline-block;width:14px;height:3px;border-top:2px dashed #d97706;vertical-align:middle;margin-right:4px"></span>Meta Independencia R$&nbsp;674.550</span>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#92400e;line-height:1.6">
+      <strong>O que e a Meta Independencia Financeira?</strong><br>
+      Patrimonio para renda passiva = receita base / rentabilidade mensal (8% a.a.) = R$&nbsp;674.550
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">Fluxo Mensal</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div style="background:#f9fafb;border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:#9ca3af;margin-bottom:2px">Receita</div>
+        <div id="fluxoRec" style="font-size:15px;font-weight:700;color:#16a34a">R$&nbsp;13.225</div>
+      </div>
+      <div style="background:#f9fafb;border-radius:8px;padding:10px">
+        <div style="font-size:10px;color:#9ca3af;margin-bottom:2px">Custo de Vida</div>
+        <div id="fluxoCust" style="font-size:15px;font-weight:700;color:#111827">R$&nbsp;7.326</div>
+      </div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:10px;color:#3b82f6;font-weight:600;margin-bottom:2px">SALDO (Receita − Custo − Dívida)</div>
+          <div id="fluxoDisp" style="font-size:18px;font-weight:700;color:#2563eb">R$&nbsp;-3</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:#6b7280">
+          <div>(-) Invest: <span id="fluxoInv" style="color:#2563eb;font-weight:600">R$&nbsp;-3</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#f9fafb;border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="font-size:10px;color:#9ca3af;margin-bottom:2px">Divida Paga no Mes</div>
+      <div id="fluxoDivVal" style="font-size:15px;font-weight:700;color:#111827">R$&nbsp;5.901</div>
+      <div id="fluxoDivMsg" style="font-size:10px;margin-top:3px;color:#9ca3af">Meta: R$ 4.469 Bradesco + R$ 1.200 Pai</div>
+      <div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden;margin-top:5px">
+        <div id="fluxoDivBar" style="width:94%;height:100%;background:#dc2626;border-radius:3px"></div>
+      </div>
+    </div>
+    <div id="fluxoSobraBox" style="background:#f0fdf4;border:1px solid #86efac;
+                border-radius:8px;padding:10px;text-align:center">
+      <div style="font-size:10px;color:#9ca3af;margin-bottom:2px">Sobra do mes</div>
+      <div id="fluxoSobra" style="font-size:20px;font-weight:700;color:#16a34a">+R$&nbsp;0</div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div class="sec" style="margin:0;border:none;padding:0">Evolucao Patrimonial — Barras</div>
+  <canvas id="cEvBar" style="max-height:180px"></canvas>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+    <div>
+      <div class="sec" style="margin:0;border:none;padding:0">Comissao — Evolucao 2026</div>
+      <div style="font-size:11px;color:#9ca3af">Jan&ndash;Jun = recebido (liquidado) &bull; Jul+ = a receber (aberto) &bull; Meta R$&nbsp;10.000/mes</div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Total mes</div>
+      <div id="comTotal" style="font-size:18px;font-weight:700;color:#374151">R$&nbsp;34.371</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Liquidado</div>
+      <div id="comLiq" style="font-size:18px;font-weight:700;color:#2563eb">R$&nbsp;34.371</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">A receber</div>
+      <div id="comAberto" style="font-size:18px;font-weight:700;color:#d97706">R$&nbsp;0</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Cobertura meta</div>
+      <div id="comCob" style="font-size:18px;font-weight:700;color:#16a34a">343.7%</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Media liquidada</div>
+      <div id="comMedia" style="font-size:18px;font-weight:700;color:#7c3aed">R$&nbsp;22.405</div>
+      <div style="font-size:9px;color:#9ca3af">6 meses pagos</div></div>
+    </div>
+  </div>
+  <canvas id="cComissao" style="max-height:180px"></canvas>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div class="sec">Acompanhamento do Plano Jul&ndash;Dez 2026</div>
+  <table id="plano"><thead><tr>
+    <th>Mes</th><th>Receita</th><th>Custo Vida</th><th>Bradesco</th>
+    <th style="color:#2563eb">A Investir</th><th>Sobra</th><th style="width:180px">Progresso</th>
+  </tr></thead><tbody><tr data-mes="7" style=""><td class="plano-lbl" data-base="JUL" style="padding:8px 10px;font-weight:600;white-space:nowrap">JUL</td><td style="padding:8px 10px">R$&nbsp;13.550</td><td style="padding:8px 10px">R$&nbsp;4.270</td><td style="padding:8px 10px"><div style="color:#dc2626;font-weight:400">R$&nbsp;0</div><span style="display:inline-block;margin-top:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626">meta R$&nbsp;4.469</span></td><td style="padding:8px 10px;color:#2563eb;font-weight:600">R$&nbsp;9.280</td><td style="padding:8px 10px;color:#16a34a;font-weight:600">+R$&nbsp;0</td><td style="padding:8px 10px;width:25%"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:50%;height:100%;background:#d97706;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:#d97706;min-width:32px;text-align:right">50%</span></div><span style="font-size:10px;color:#d97706;font-weight:600">Atencao</span></td></tr><tr data-mes="8" style=""><td class="plano-lbl" data-base="AGO" style="padding:8px 10px;font-weight:600;white-space:nowrap">AGO</td><td style="padding:8px 10px">R$&nbsp;7.904</td><td style="padding:8px 10px">R$&nbsp;3.721</td><td style="padding:8px 10px"><div style="color:#dc2626;font-weight:400">R$&nbsp;0</div><span style="display:inline-block;margin-top:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626">meta R$&nbsp;4.469</span></td><td style="padding:8px 10px;color:#2563eb;font-weight:600">R$&nbsp;4.183</td><td style="padding:8px 10px;color:#16a34a;font-weight:600">+R$&nbsp;0</td><td style="padding:8px 10px;width:25%"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:50%;height:100%;background:#d97706;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:#d97706;min-width:32px;text-align:right">50%</span></div><span style="font-size:10px;color:#d97706;font-weight:600">Atencao</span></td></tr><tr data-mes="9" style=""><td class="plano-lbl" data-base="SET" style="padding:8px 10px;font-weight:600;white-space:nowrap">SET</td><td style="padding:8px 10px">R$&nbsp;7.790</td><td style="padding:8px 10px">R$&nbsp;3.726</td><td style="padding:8px 10px"><div style="color:#dc2626;font-weight:400">R$&nbsp;0</div><span style="display:inline-block;margin-top:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626">meta R$&nbsp;4.469</span></td><td style="padding:8px 10px;color:#2563eb;font-weight:600">R$&nbsp;4.064</td><td style="padding:8px 10px;color:#16a34a;font-weight:600">+R$&nbsp;0</td><td style="padding:8px 10px;width:25%"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:50%;height:100%;background:#d97706;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:#d97706;min-width:32px;text-align:right">50%</span></div><span style="font-size:10px;color:#d97706;font-weight:600">Atencao</span></td></tr><tr data-mes="10" style=""><td class="plano-lbl" data-base="OUT" style="padding:8px 10px;font-weight:600;white-space:nowrap">OUT</td><td style="padding:8px 10px">R$&nbsp;7.790</td><td style="padding:8px 10px">R$&nbsp;3.691</td><td style="padding:8px 10px"><div style="color:#dc2626;font-weight:400">R$&nbsp;0</div><span style="display:inline-block;margin-top:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626">meta R$&nbsp;4.469</span></td><td style="padding:8px 10px;color:#2563eb;font-weight:600">R$&nbsp;4.099</td><td style="padding:8px 10px;color:#16a34a;font-weight:600">+R$&nbsp;0</td><td style="padding:8px 10px;width:25%"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:50%;height:100%;background:#d97706;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:#d97706;min-width:32px;text-align:right">50%</span></div><span style="font-size:10px;color:#d97706;font-weight:600">Atencao</span></td></tr><tr data-mes="11" style=""><td class="plano-lbl" data-base="NOV" style="padding:8px 10px;font-weight:600;white-space:nowrap">NOV</td><td style="padding:8px 10px">R$&nbsp;7.790</td><td style="padding:8px 10px">R$&nbsp;3.691</td><td style="padding:8px 10px"><div style="color:#dc2626;font-weight:400">R$&nbsp;0</div><span style="display:inline-block;margin-top:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626">meta R$&nbsp;4.469</span></td><td style="padding:8px 10px;color:#2563eb;font-weight:600">R$&nbsp;4.099</td><td style="padding:8px 10px;color:#16a34a;font-weight:600">+R$&nbsp;0</td><td style="padding:8px 10px;width:25%"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:50%;height:100%;background:#d97706;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:#d97706;min-width:32px;text-align:right">50%</span></div><span style="font-size:10px;color:#d97706;font-weight:600">Atencao</span></td></tr><tr data-mes="12" style=""><td class="plano-lbl" data-base="DEZ" style="padding:8px 10px;font-weight:600;white-space:nowrap">DEZ</td><td style="padding:8px 10px">R$&nbsp;13.430</td><td style="padding:8px 10px">R$&nbsp;3.691</td><td style="padding:8px 10px"><div style="color:#dc2626;font-weight:400">R$&nbsp;0</div><span style="display:inline-block;margin-top:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#fee2e2;color:#dc2626">meta R$&nbsp;4.469</span></td><td style="padding:8px 10px;color:#2563eb;font-weight:600">R$&nbsp;9.739</td><td style="padding:8px 10px;color:#16a34a;font-weight:600">+R$&nbsp;0</td><td style="padding:8px 10px;width:25%"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div style="flex:1;background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:50%;height:100%;background:#d97706;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:#d97706;min-width:32px;text-align:right">50%</span></div><span style="font-size:10px;color:#d97706;font-weight:600">Atencao</span></td></tr></tbody></table>
+</div>
+
+<div class="g3">
+  <div class="card">
+    <div class="sec">Distribuicao dos Gastos <span id="pieMesLbl" style="font-weight:400;color:#9ca3af;text-transform:none;letter-spacing:0">— mes selecionado</span></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+      <div style="position:relative;width:110px;height:110px;flex-shrink:0">
+        <canvas id="cPie"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+          <div style="font-size:10px;color:#9ca3af">Total</div>
+          <div id="pieTotal" style="font-size:13px;font-weight:700">R$&nbsp;7.326</div>
+        </div>
+      </div>
+      <div id="gastosLegend" style="flex:1"><div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#6366f1;margin-right:4px;vertical-align:middle"></span>Fixas</span><span style="font-weight:600">R$&nbsp;2.442<span style="color:#9ca3af;font-weight:400"> 33%</span></span></div><div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden"><div style="width:33%;height:100%;background:#6366f1;border-radius:3px"></div></div></div><div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2563eb;margin-right:4px;vertical-align:middle"></span>Lazer</span><span style="font-weight:600">R$&nbsp;2.596<span style="color:#9ca3af;font-weight:400"> 35%</span></span></div><div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden"><div style="width:35%;height:100%;background:#2563eb;border-radius:3px"></div></div></div><div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#16a34a;margin-right:4px;vertical-align:middle"></span>Habitacao</span><span style="font-weight:600">R$&nbsp;1.229<span style="color:#9ca3af;font-weight:400"> 17%</span></span></div><div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden"><div style="width:17%;height:100%;background:#16a34a;border-radius:3px"></div></div></div><div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d97706;margin-right:4px;vertical-align:middle"></span>Veiculo</span><span style="font-weight:600">R$&nbsp;823<span style="color:#9ca3af;font-weight:400"> 11%</span></span></div><div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden"><div style="width:11%;height:100%;background:#d97706;border-radius:3px"></div></div></div><div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#9ca3af;margin-right:4px;vertical-align:middle"></span>Outros</span><span style="font-weight:600">R$&nbsp;236<span style="color:#9ca3af;font-weight:400"> 3%</span></span></div><div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden"><div style="width:3%;height:100%;background:#9ca3af;border-radius:3px"></div></div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">Maior Potencial de Ganho</div>
+    <div class="acao"><div class="anum" style="background:#fef2f2;color:#dc2626">1</div><div><h4 style="font-size:12px;margin-bottom:1px">DT virar neutro</h4><span style="font-size:11px;color:#6b7280">+R$&nbsp;26.210/mes &bull; +R$&nbsp;157.261/ano</span></div></div><div class="acao"><div class="anum" style="background:#eff6ff;color:#2563eb">2</div><div><h4 style="font-size:12px;margin-bottom:1px">Comissao R$5k (+R$2k)</h4><span style="font-size:11px;color:#6b7280">+R$&nbsp;2.000/mes &bull; +R$&nbsp;24.000/ano</span></div></div><div class="acao"><div class="anum" style="background:#f5f3ff;color:#7c3aed">3</div><div><h4 style="font-size:12px;margin-bottom:1px">Nova fonte MEI R$1.5k</h4><span style="font-size:11px;color:#6b7280">+R$&nbsp;1.500/mes &bull; +R$&nbsp;18.000/ano</span></div></div><div class="acao"><div class="anum" style="background:#f0fdf4;color:#16a34a">4</div><div><h4 style="font-size:12px;margin-bottom:1px">Quitar Bradesco</h4><span style="font-size:11px;color:#6b7280">+R$&nbsp;4.469/mes &bull; +R$&nbsp;53.628/ano</span></div></div><div class="acao"><div class="anum" style="background:#fffbeb;color:#d97706">5</div><div><h4 style="font-size:12px;margin-bottom:1px">Cortar variaveis</h4><span style="font-size:11px;color:#6b7280">+R$&nbsp;500/mes &bull; +R$&nbsp;6.000/ano</span></div></div>
+  </div>
+  <div class="card">
+    <div class="sec">Receita Base vs Meta (viver so com salario)</div>
+    <div class="pbar-wrap"><div class="pbar-lbl"><span>Salario liquido</span><span>R$&nbsp;2.206</span></div>
+    <div class="pbar"><div class="pfill" style="width:49%;background:#2563eb"></div></div></div>
+    <div class="pbar-wrap"><div class="pbar-lbl"><span>Vale dia 20</span><span>R$&nbsp;1.587</span></div>
+    <div class="pbar"><div class="pfill" style="width:35%;background:#7c3aed"></div></div></div>
+    <div class="pbar-wrap"><div class="pbar-lbl"><span>Vale Alimentacao</span><span>R$&nbsp;704</span></div>
+    <div class="pbar"><div class="pfill" style="width:16%;background:#16a34a"></div></div></div>
+    <div style="border-top:1px solid #f3f4f6;margin-top:8px;padding-top:8px">
+      <div id="gapCustoBox" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:7px 10px;font-size:11px;color:#dc2626">
+        Gap atual: R$ 2.829 — cortar R$ 2.829 nas variaveis fecha o orcamento
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+    <div>
+      <div class="sec" style="margin:0;border:none;padding:0">Cartao de Credito</div>
+      <div style="font-size:11px;color:#9ca3af">Aba Divida &mdash; grafico pelo mes dos gastos; indicador pelo mes do pagamento</div>
+      <div id="ccTitulo" style="font-size:10px;color:#6b7280;margin-top:4px">GASTOS MAIO/26 - PAGAMENTO JUNHO</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:10px;color:#9ca3af">Devedor a pagar em <span id="ccMesLbl">June / 2026</span></div>
+      <div id="ccNaoPago" style="font-size:24px;font-weight:700;color:#16a34a">R$&nbsp;0</div>
+      <div style="font-size:11px;color:#6b7280">Fatura total do mes: <span id="ccTotal">R$&nbsp;5.639</span></div>
+    </div>
+  </div>
+  <canvas id="cCartao" style="max-height:160px"></canvas>
+  <div id="ccTop" style="margin-top:8px;font-size:11px;color:#6b7280"><span style="color:#9ca3af">Nenhum item devedor (todos antecipados ou sem fatura)</span></div>
+</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="sec">Roadmap Financeiro</div>
+    <div class="rm">
+      <div class="rmi"><div class="rmd" style="background:#fee2e2">💳</div><div class="rmy">2026</div>
+      <div class="rmt">Quitar Divida e Blindar Perda no DT</div><div class="rms">Eliminar Bradesco e Pai</div></div>
+      <div class="rmi"><div class="rmd" style="background:#fef9c3">🛡</div><div class="rmy">2027</div>
+      <div class="rmt">Reserva Completa</div><div class="rms">6 meses de custo de vida</div></div>
+      <div class="rmi"><div class="rmd" style="background:#dbeafe">📈</div><div class="rmy">2028</div>
+      <div class="rmt">Investimento Ac.</div><div class="rms">Aportes R$10k+/mes</div></div>
+      <div class="rmi"><div class="rmd" style="background:#dcfce7">🏆</div><div class="rmy">2031</div>
+      <div class="rmt">Independencia</div><div class="rms">Renda passiva = salario</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">Acoes Prioritarias</div>
+    <div class="acao"><div class="anum">1</div><div><h4>Negociar e quitar Bradesco</h4><span>R$&nbsp;4.469/mes</span></div></div>
+    <div class="acao"><div class="anum">2</div><div><h4>Reduzir variaveis em R$ 444</h4><span>Supermercado + restaurante</span></div></div>
+    <div class="acao"><div class="anum">3</div><div><h4>Conta separada para comissao</h4><span>Comissao vai para investimento</span></div></div>
+    <div class="acao"><div class="anum">4</div><div><h4>Nova fonte de renda MEI</h4><span>6 clientes x R$ 250</span></div></div>
+    <div class="acao"><div class="anum">5</div><div><h4>Executar nova estrategia DT</h4><span>3-5 contratos, stop 700 pts</span></div></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div class="sec" style="margin:0;border:none;padding:0">Trading — Nova Fase</div>
+      <div style="font-size:11px;color:#9ca3af">Meta ano R$&nbsp;60.000 &bull; Meta mes na aba DT (R$ 1.200/dia) &bull; Liquido desde 08/06/2026</div>
+    </div>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px">
+      <div>
+        <div style="font-size:10px;color:#16a34a;font-weight:600">Margem BTG1</div>
+        <div style="font-size:20px;font-weight:700;color:#15803d">R$&nbsp;11.462</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:#9ca3af">Acumulado <span id="dtMesAntLabel">Jun/26</span></div>
+        <div id="dtAcum" style="font-size:18px;font-weight:700;color:#16a34a">R$&nbsp;7.338</div>
+      </div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Rentabilidade</div>
+      <div id="dtRentab" style="font-size:18px;font-weight:700;color:#dc2626">-300.7%</div>
+      <div style="font-size:9px;color:#9ca3af">valor dia / acum anterior</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Cobertura mes</div>
+      <div id="dtCobMes" style="font-size:18px;font-weight:700;color:#2563eb">36.0%</div>
+      <div style="font-size:9px;color:#9ca3af">meta <span id="dtMetaMesLbl">R$&nbsp;20.400</span></div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Cobertura ano 60k</div>
+      <div id="dtCobAnual" style="font-size:18px;font-weight:700;color:#d97706">12.2%</div>
+      <div style="font-size:9px;color:#9ca3af">acum total / 60k</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">% da meta</div>
+      <div id="dtCresc" style="font-size:18px;font-weight:700;color:#dc2626">36.0%</div>
+      <div style="font-size:9px;color:#9ca3af">do mês ref</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">Gain/Loss</div>
+      <div id="dtGL" style="font-size:18px;font-weight:700;color:#374151">1d/1d</div></div>
+    </div>
+  </div>
+  <canvas id="cDT" style="max-height:120px"></canvas>
+  <div style="margin-top:8px;font-size:11px;color:#9ca3af;display:flex;gap:16px;flex-wrap:wrap">
+    <span>Acumulado pos-08/06: <strong id="dtAcumTotal" style="color:#374151">R$&nbsp;7.338</strong></span>
+    <span>Historico anterior (antes 08/06): <span style="color:#dc2626">R$&nbsp;-157.261</span></span>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <span>Ultima atualizacao: 09/06/2026 17:38</span>
+  <button class="btn" onclick="window.print()">Exportar PDF</button>
+</footer>
+
+<script>
+const EVOLUCAO = {"defaultMes": 6, "ano": 2026, "meses": [{"n": 1, "label": "January / 2026"}, {"n": 2, "label": "February / 2026"}, {"n": 3, "label": "March / 2026"}, {"n": 5, "label": "May / 2026"}, {"n": 6, "label": "June / 2026"}, {"n": 7, "label": "July / 2026"}, {"n": 8, "label": "August / 2026"}, {"n": 9, "label": "September / 2026"}, {"n": 10, "label": "October / 2026"}, {"n": 11, "label": "November / 2026"}, {"n": 12, "label": "December / 2026"}], "byMes": {"1": {"label": "January / 2026", "cresc": {"pct": -0.4397940541438227, "cor": "#dc2626", "barra": 0, "alvo": 99226.08, "gap": -3313.7599999999948, "mont_atual": 95912.32}, "receitaExtra": {"dt": -36035.62, "outros": 59545.880000000005, "total": 23510.260000000002}, "receitaExtraAnt": {"dt": 42065.33, "outros": 245.58, "total": 42310.91}, "labelAnt": "Dec/2025", "med": {"receita": 45705.71000000001, "fixas": 2035.71, "var": 7343.92, "divida": 25816.16, "inv": 15409.920000000002, "custo": 9379.630000000001}, "gastos": {"Fixas": 2035.71, "Lazer": 2613.6800000000003, "Habitacao": 1403.53, "Veiculo": 1423.16, "Outros": 1903.55}, "cartao": {"total": 5769.58, "naoPago": 0.0, "top": [], "titulo": "GASTOS DEZEMBRO/25 - PAGAMENTO JANEIRO", "cartoes": {"BRA": 5034.57, "XP": 559.08, "RCHO": 175.93, "CEA": 0.0}, "mesGastos": 12, "anoGastos": 2025}, "comissao": {"liquidado": 18594.31, "naoLiquidado": 0.0, "total": 18594.31, "cobertura": 185.9}, "rec": 45705.71000000001, "cust": 9379.630000000001, "div": 25816.16, "inv": 15409.920000000002, "fluxo": -4900.0, "saldoMes": 10509.92, "score": 65, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 0.5330700677958512}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 1.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 0.8927923885221344}], "custoOk": false, "custoPct": 53.30700677958512, "gapCusto4497": 4883, "divMsg": "Meta: R$ 4.469 Bradesco + R$ 1.200 Pai", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "—", "acumTotal": 0, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 0.0, "cobertura": 0.0, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["—"], "values": [0], "rentabDiaria": [0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 5557.27, "fgts": 543.73, "plano": 645.27, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 596.83, "total": 16872.009100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "5 de 8 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita liquida do mes", "status": "ok", "detail": "R$ 45.706"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "DT R$ -36.036 + Outros R$ 59.546"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "alerta", "detail": "R$ 9.380"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Sobra apos divida e investimento", "status": "alerta", "detail": "Fluxo R$ -4.900"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 10.510"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 15.410 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "alerta", "detail": "-0.4% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "65/100"}]}], "resumo": "5/8"}, "insights": [{"text": "Sobra negativa R$ 4.900: saldo planilha nao cobriu investimento.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "DT na receita liquida: R$ -36.036 em January.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Corte de R$ 4.883 nas variaveis fecha o teto salario (R$ 4.497).", "bg": "#fffbeb", "border": "#fcd34d", "icon": "💡"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Patrimonio caiu -0.4% vs mes anterior.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}]}, "2": {"label": "February / 2026", "cresc": {"pct": -32.06920654197501, "cor": "#dc2626", "barra": 0, "alvo": 98789.68960000001, "gap": -33635.68960000001, "mont_atual": 65154.0}, "receitaExtra": {"dt": -36310.8, "outros": 18295.579999999998, "total": -18015.220000000005}, "receitaExtraAnt": {"dt": -36035.62, "outros": 59545.880000000005, "total": 23510.260000000002}, "labelAnt": "Jan/2026", "med": {"receita": 3444.6299999999956, "fixas": 2427.89, "var": 8627.09, "divida": 21579.260000000002, "inv": -27189.610000000008, "custo": 11054.98}, "gastos": {"Fixas": 2427.89, "Lazer": 6465.420000000001, "Habitacao": 638.8000000000001, "Veiculo": 1149.05, "Outros": 373.82000000000005}, "cartao": {"total": 8067.54, "naoPago": 0, "top": [{"nome": "XP / XP", "val": -559.08}], "titulo": "GASTOS JANEIRO/25 - PAGAMENTO FEVEREIRO", "cartoes": {"BRA": 7816.3, "XP": -0.0, "RCHO": 109.98, "CEA": 0.0}, "mesGastos": 1, "anoGastos": 2026}, "comissao": {"liquidado": 16594.78, "naoLiquidado": 0.0, "total": 16594.78, "cobertura": 165.9}, "rec": 3444.6299999999956, "cust": 11054.98, "div": 21579.260000000002, "inv": -27189.610000000008, "fluxo": -2000.0, "saldoMes": -29189.61, "score": -42, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 0.45228485261845797}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 1.0}, {"name": "Investiu", "pct": -9.063203333333336}, {"name": "Fluxo positivo", "pct": 0.41938611694144146}], "custoOk": false, "custoPct": 45.2284852618458, "gapCusto4497": 6558, "divMsg": "Meta: R$ 4.469 Bradesco + R$ 1.200 Pai", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "—", "acumTotal": 0, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 0.0, "cobertura": 0.0, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["—"], "values": [0], "rentabDiaria": [0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 5557.27, "fgts": 543.73, "plano": 645.27, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 596.83, "total": 16872.009100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "1 de 8 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita liquida do mes", "status": "ok", "detail": "R$ 3.445"}, {"label": "Receita extra (DT + Outros)", "status": "alerta", "detail": "DT R$ -36.311 + Outros R$ 18.296"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "alerta", "detail": "R$ 11.055"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Sobra apos divida e investimento", "status": "alerta", "detail": "Fluxo R$ -2.000"}, {"label": "Saldo apos custo e divida (planilha)", "status": "alerta", "detail": "R$ -29.190"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "alerta", "detail": "R$ -27.190 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "alerta", "detail": "-32.1% / meta +3%"}, {"label": "Score financeiro", "status": "alerta", "detail": "-42/100"}]}], "resumo": "1/8"}, "insights": [{"text": "Sobra negativa R$ 2.000: saldo planilha nao cobriu investimento.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Score -42/100 — revise o checklist do mes.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "DT na receita liquida: R$ -36.311 em February.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Corte de R$ 6.558 nas variaveis fecha o teto salario (R$ 4.497).", "bg": "#fffbeb", "border": "#fcd34d", "icon": "💡"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}]}, "3": {"label": "March / 2026", "cresc": {"pct": 79.72439144181477, "cor": "#16a34a", "barra": 100, "alvo": 67108.62, "gap": 49989.01000000001, "mont_atual": 117097.63}, "receitaExtra": {"dt": 43341.84, "outros": 1100.0, "total": 44441.84}, "receitaExtraAnt": {"dt": -36310.8, "outros": 18295.579999999998, "total": -18015.220000000005}, "labelAnt": "Feb/2026", "med": {"receita": 80079.37, "fixas": 2899.63, "var": 9363.720000000001, "divida": 11290.310000000001, "inv": 56525.70999999999, "custo": 12263.350000000002}, "gastos": {"Fixas": 2899.63, "Lazer": 5588.43, "Habitacao": 665.95, "Veiculo": 1359.25, "Outros": 1750.09}, "cartao": {"total": 7815.86, "naoPago": 0.0, "top": [{"nome": "XP / XP", "val": 0.0}], "titulo": "GASTOS FEVEREIRO/25 - PAGAMENTO MARÇO", "cartoes": {"BRA": 7148.78, "XP": 667.08, "RCHO": 0.0, "CEA": 0.0}, "mesGastos": 2, "anoGastos": 2026}, "comissao": {"liquidado": 30776.53, "naoLiquidado": 0.0, "total": 30776.53, "cobertura": 307.8}, "rec": 80079.37, "cust": 12263.350000000002, "div": 11290.310000000001, "inv": 56525.70999999999, "fluxo": 0.0, "saldoMes": 56525.71, "score": 64, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 0.40771893487505445}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 1.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": false, "custoPct": 40.771893487505444, "gapCusto4497": 7766, "divMsg": "Meta: R$ 4.469 Bradesco + R$ 1.200 Pai", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "—", "acumTotal": 0, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 0.0, "cobertura": 0.0, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["—"], "values": [0], "rentabDiaria": [0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 5557.27, "fgts": 543.73, "plano": 645.27, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 596.83, "total": 16872.009100000003}, "statusVoo": {"nivel": "ok", "titulo": "Plano de voo no trilho", "msg": "7 de 8 indicadores ok — plano sendo obedecido.", "icon": "✓", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita liquida do mes", "status": "ok", "detail": "R$ 80.079"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "DT R$ 43.342 + Outros R$ 1.100"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "alerta", "detail": "R$ 12.263"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 56.526"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 56.526 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+79.7% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "64/100"}]}], "resumo": "7/8"}, "insights": [{"text": "Corte de R$ 7.766 nas variaveis fecha o teto salario (R$ 4.497).", "bg": "#fffbeb", "border": "#fcd34d", "icon": "💡"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Bradesco: R$ 11.290 pago — restam R$ 50.747.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}, {"text": "Investimento R$ 56.526 — meta R$ 3.000 atingida.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "5": {"label": "May / 2026", "cresc": {"pct": 186.35186848010443, "cor": "#16a34a", "barra": 100, "alvo": 12182.077800000001, "gap": 21685.502200000003, "mont_atual": 33867.58}, "receitaExtra": {"dt": 13070.27, "outros": 17925.0, "total": 30995.27}, "receitaExtraAnt": {"dt": -104348.9, "outros": 0.0, "total": -104348.9}, "labelAnt": "Apr/2026", "med": {"receita": 46470.81, "fixas": 1992.09, "var": 15515.330000000002, "divida": 12725.57, "inv": 16237.820000000003, "custo": 17507.420000000002}, "gastos": {"Fixas": 1992.09, "Lazer": 2573.2700000000004, "Habitacao": 547.89, "Veiculo": 7837.3, "Outros": 4556.87}, "cartao": {"total": 13051.21, "naoPago": 0.0, "top": [], "titulo": "GASTOS ABRIL25 - PAGAMENTO MAIO", "cartoes": {"BRA": 11311.28, "XP": 218.0, "RCHO": 30.0, "CEA": 0.0}, "mesGastos": 4, "anoGastos": 2026}, "comissao": {"liquidado": 10496.56, "naoLiquidado": 0.0, "total": 10496.56, "cobertura": 105.0}, "rec": 46470.81, "cust": 17507.420000000002, "div": 12725.57, "inv": 16237.820000000003, "fluxo": -0.0, "saldoMes": 16237.82, "score": 62, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 0.2855931941999449}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 1.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": false, "custoPct": 28.559319419994488, "gapCusto4497": 13010, "divMsg": "Meta: R$ 4.469 Bradesco + R$ 1.200 Pai", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "—", "acumTotal": 0, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 0.0, "cobertura": 0.0, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["—"], "values": [0], "rentabDiaria": [0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 5557.27, "fgts": 543.73, "plano": 645.27, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 596.83, "total": 16872.009100000003}, "statusVoo": {"nivel": "ok", "titulo": "Plano de voo no trilho", "msg": "7 de 8 indicadores ok — plano sendo obedecido.", "icon": "✓", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita liquida do mes", "status": "ok", "detail": "R$ 46.471"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "DT R$ 13.070 + Outros R$ 17.925"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "alerta", "detail": "R$ 17.507"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ -0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 16.238"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 16.238 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+186.4% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "62/100"}]}], "resumo": "7/8"}, "insights": [{"text": "Corte de R$ 13.010 nas variaveis fecha o teto salario (R$ 4.497).", "bg": "#fffbeb", "border": "#fcd34d", "icon": "💡"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Bradesco: R$ 12.726 pago — restam R$ 49.312.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}, {"text": "Investimento R$ 16.238 — meta R$ 3.000 atingida.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "6": {"label": "June / 2026", "cresc": {"pct": -13.777925674051714, "cor": "#dc2626", "barra": 0, "alvo": 34883.6074, "gap": -5682.277400000003, "mont_atual": 29201.329999999998}, "receitaExtra": {"dt": -36977.76240000001, "outros": 11041.5, "total": -25936.262400000007}, "receitaExtraAnt": {"dt": 13070.27, "outros": 17925.0, "total": 30995.27}, "labelAnt": "May/2026", "med": {"receita": 13224.707599999994, "fixas": 2442.5, "var": 4883.92, "divida": 5901.43, "inv": -3.1424000000060914, "custo": 7326.42}, "gastos": {"Fixas": 2442.5, "Lazer": 2596.48, "Habitacao": 1229.13, "Veiculo": 822.7399999999999, "Outros": 235.57}, "cartao": {"total": 5638.52, "naoPago": 0.0, "top": [], "titulo": "GASTOS MAIO/26 - PAGAMENTO JUNHO", "cartoes": {"BRA": 5303.3, "XP": 335.22, "RCHO": 0.0, "CEA": 0.0}, "mesGastos": 5, "anoGastos": 2026}, "comissao": {"liquidado": 34371.0, "naoLiquidado": 0.0, "total": 34371.0, "cobertura": 343.7}, "rec": 13224.707599999994, "cust": 7326.42, "div": 5901.43, "inv": -3.1424000000060914, "fluxo": 0.0, "saldoMes": -3.14, "score": 58, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 0.6824615569404975}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.9413670441856756}, {"name": "Investiu", "pct": -0.0010474666666686972}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": false, "custoPct": 68.24615569404975, "gapCusto4497": 2829, "divMsg": "Meta: R$ 4.469 Bradesco + R$ 1.200 Pai", "dt": {"total": 7338.26, "totalMesAnterior": 7338.26, "labelMesAnterior": "Jun/26", "acumTotal": 7338.26, "metaMes": 20400.0, "rentab": -3.0066, "coberturaMes": 36.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 36.0, "pos": 1, "neg": 1, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 17}, "dtPct": 36.0, "beneficios": {"salario": 5557.27, "fgts": 543.73, "plano": 645.27, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 596.83, "total": 16872.009100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "4 de 9 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita liquida do mes", "status": "ok", "detail": "R$ 13.225"}, {"label": "Receita extra (DT + Outros)", "status": "alerta", "detail": "DT R$ -36.978 + Outros R$ 11.042"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "alerta", "detail": "R$ 7.326"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "alerta", "detail": "R$ -3"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "alerta", "detail": "R$ -3 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "alerta", "detail": "-13.8% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "58/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 7.338"}]}], "resumo": "4/9"}, "insights": [{"text": "DT na receita liquida: R$ -36.978 em June.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Corte de R$ 2.829 nas variaveis fecha o teto salario (R$ 4.497).", "bg": "#fffbeb", "border": "#fcd34d", "icon": "💡"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Patrimonio caiu -13.8% vs mes anterior.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Investimento R$ -3 abaixo da meta R$ 3.000.", "bg": "#fffbeb", "border": "#fcd34d", "icon": "💡"}]}, "7": {"label": "July / 2026", "cresc": {"pct": 17.12250777618692, "cor": "#16a34a", "barra": 100, "alvo": 30077.369899999998, "gap": 4123.960100000004, "mont_atual": 34201.33}, "receitaExtra": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "receitaExtraAnt": {"dt": -36977.76240000001, "outros": 11041.5, "total": -25936.262400000007}, "labelAnt": "Jun/2026", "med": {"receita": 13387.338799999998, "fixas": 2106.11, "var": 3692.3315000000002, "divida": 2950.715, "inv": 4638.182299999997, "custo": 5798.441500000001}, "gastos": {"Fixas": 1769.72, "Lazer": 1191.39, "Habitacao": 406.59299999999996, "Veiculo": 341.76, "Outros": 561.0}, "cartao": {"total": 2523.1, "naoPago": 207.75, "top": [{"nome": "BRA / Tenis Arthur", "val": 141.68}, {"nome": "BRA / Treinamento", "val": 30.72}, {"nome": "BRA / Netflix", "val": 20.9}, {"nome": "BRA / Presente", "val": 14.45}], "titulo": "GASTOS JUNHO/26 - PAGAMENTO JULHO", "cartoes": {"BRA": 2290.73, "XP": 232.37, "RCHO": 0.0, "CEA": 0.0}, "mesGastos": 6, "anoGastos": 2026}, "comissao": {"liquidado": 0.0, "naoLiquidado": 16523.38, "total": 16523.38, "cobertura": 165.2}, "rec": 13549.97, "cust": 4270.463, "div": 0.0, "inv": 9279.507, "fluxo": 0.0, "saldoMes": 9279.51, "score": 56, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 1.0}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": false, "custoPct": 86.2300671654616, "gapCusto4497": -227, "divMsg": "Bradesco nao pago — meta R$ 4.469/mes", "dt": {"total": 7338.26, "totalMesAnterior": 7338.26, "labelMesAnterior": "Jun/26", "acumTotal": 7338.26, "metaMes": 20400.0, "rentab": -3.0066, "coberturaMes": 36.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 36.0, "pos": 1, "neg": 1, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 17}, "dtPct": 36.0, "beneficios": {"salario": 6058.72, "fgts": 484.69, "plano": 734.99, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 646.72, "total": 16952.579100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "10 de 11 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita vs plano JUL", "status": "ok", "detail": "R$ 13.550 / meta R$ 11.550"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "Sem lancamento no mes"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "ok", "detail": "R$ 4.270"}, {"label": "Custo do mes vs plano", "status": "ok", "detail": "R$ 4.270 / meta R$ 4.388"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Pagamento divida (Bradesco/Pai/Junia)", "status": "alerta", "detail": "Nao pago no mes"}, {"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 9.280"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 9.280 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+17.1% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "56/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 7.338"}]}], "resumo": "10/11"}, "insights": [{"text": "Bradesco nao pago em July: divida R$ 62.037 (500% do patrimonio).", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Quitar Bradesco libera R$ 4.469/mes — R$ 53.628/ano.", "bg": "#eff6ff", "border": "#93c5fd", "icon": "🎯"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Custo OK em July — margem R$ 227 abaixo do teto salario.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "8": {"label": "August / 2026", "cresc": {"pct": 14.619314512037981, "cor": "#16a34a", "barra": 100, "alvo": 35227.369900000005, "gap": 3973.9600999999966, "mont_atual": 39201.33}, "receitaExtra": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "receitaExtraAnt": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "labelAnt": "Jul/2026", "med": {"receita": 11559.559199999998, "fixas": 2013.9800000000002, "var": 3092.094333333333, "divida": 1967.1433333333334, "inv": 4486.341533333331, "custo": 5106.074333333333}, "gastos": {"Fixas": 1829.72, "Lazer": 200.0, "Habitacao": 720.9, "Veiculo": 690.0, "Outros": 280.72}, "cartao": {"total": 0, "naoPago": 0, "top": [], "titulo": "", "cartoes": {}}, "comissao": {"liquidado": 0.0, "naoLiquidado": 10454.42, "total": 10454.42, "cobertura": 104.5}, "rec": 7904.0, "cust": 3721.34, "div": 0.0, "inv": 4182.66, "fluxo": 0.0, "saldoMes": 4182.66, "score": 56, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 1.0}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": false, "custoPct": 97.92258540693656, "gapCusto4497": -776, "divMsg": "Bradesco nao pago — meta R$ 4.469/mes", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "Jul/26", "acumTotal": 7338.26, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 6058.72, "fgts": 484.69, "plano": 734.99, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 646.72, "total": 16952.579100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "10 de 11 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita vs plano AGO", "status": "ok", "detail": "R$ 7.904 / meta R$ 7.790"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "Sem lancamento no mes"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "ok", "detail": "R$ 3.721"}, {"label": "Custo do mes vs plano", "status": "ok", "detail": "R$ 3.721 / meta R$ 3.726"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Pagamento divida (Bradesco/Pai/Junia)", "status": "alerta", "detail": "Nao pago no mes"}, {"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 4.183"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 4.183 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+14.6% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "56/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 0"}]}], "resumo": "10/11"}, "insights": [{"text": "Bradesco nao pago em August: divida R$ 62.037 (500% do patrimonio).", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Quitar Bradesco libera R$ 4.469/mes — R$ 53.628/ano.", "bg": "#eff6ff", "border": "#93c5fd", "icon": "🎯"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Custo OK em August — margem R$ 776 abaixo do teto salario.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "9": {"label": "September / 2026", "cresc": {"pct": 12.754669293108167, "cor": "#16a34a", "barra": 100, "alvo": 40377.369900000005, "gap": 3823.9600999999966, "mont_atual": 44201.33}, "receitaExtra": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "receitaExtraAnt": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "labelAnt": "Aug/2026", "med": {"receita": 10617.1619, "fixas": 1976.6650000000002, "var": 2784.2957499999998, "divida": 1475.3575, "inv": 4380.843649999998, "custo": 4760.96075}, "gastos": {"Fixas": 1864.72, "Lazer": 200.0, "Habitacao": 720.9, "Veiculo": 690.0, "Outros": 250.0}, "cartao": {"total": 0, "naoPago": 0, "top": [], "titulo": "", "cartoes": {}}, "comissao": {"liquidado": 0.0, "naoLiquidado": 16063.73, "total": 16063.73, "cobertura": 160.6}, "rec": 7789.969999999999, "cust": 3725.62, "div": 0.0, "inv": 4064.349999999999, "fluxo": 0.0, "saldoMes": 4064.35, "score": 56, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 1.0}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": true, "custoPct": 100, "gapCusto4497": -771, "divMsg": "Bradesco nao pago — meta R$ 4.469/mes", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "Aug/26", "acumTotal": 7338.26, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 6058.72, "fgts": 484.69, "plano": 734.99, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 646.72, "total": 16952.579100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "10 de 11 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita vs plano SET", "status": "ok", "detail": "R$ 7.790 / meta R$ 7.290"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "Sem lancamento no mes"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "ok", "detail": "R$ 3.726"}, {"label": "Custo do mes vs plano", "status": "ok", "detail": "R$ 3.726 / meta R$ 3.726"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Pagamento divida (Bradesco/Pai/Junia)", "status": "alerta", "detail": "Nao pago no mes"}, {"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 4.064"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 4.064 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+12.8% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "56/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 0"}]}], "resumo": "10/11"}, "insights": [{"text": "Bradesco nao pago em September: divida R$ 62.037 (500% do patrimonio).", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Quitar Bradesco libera R$ 4.469/mes — R$ 53.628/ano.", "bg": "#eff6ff", "border": "#93c5fd", "icon": "🎯"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Custo OK em September — margem R$ 771 abaixo do teto salario.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "10": {"label": "October / 2026", "cresc": {"pct": 11.311876814566439, "cor": "#16a34a", "barra": 100, "alvo": 45527.369900000005, "gap": 3673.9600999999966, "mont_atual": 49201.33}, "receitaExtra": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "receitaExtraAnt": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "labelAnt": "Sep/2026", "med": {"receita": 10051.72352, "fixas": 1947.2760000000003, "var": 2599.6166, "divida": 1180.286, "inv": 4324.5449199999985, "custo": 4546.8926}, "gastos": {"Fixas": 1829.72, "Lazer": 200.0, "Habitacao": 720.9, "Veiculo": 690.0, "Outros": 250.0}, "cartao": {"total": 0, "naoPago": 0, "top": [], "titulo": "", "cartoes": {}}, "comissao": {"liquidado": 0.0, "naoLiquidado": 42322.88, "total": 42322.88, "cobertura": 423.2}, "rec": 7789.969999999999, "cust": 3690.62, "div": 0.0, "inv": 4099.3499999999985, "fluxo": 0.0, "saldoMes": 4099.35, "score": 56, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 1.0}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": true, "custoPct": 100, "gapCusto4497": -806, "divMsg": "Bradesco nao pago — meta R$ 4.469/mes", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "Sep/26", "acumTotal": 7338.26, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 6058.72, "fgts": 484.69, "plano": 734.99, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 646.72, "total": 16952.579100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "10 de 11 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita vs plano OUT", "status": "ok", "detail": "R$ 7.790 / meta R$ 7.290"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "Sem lancamento no mes"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "ok", "detail": "R$ 3.691"}, {"label": "Custo do mes vs plano", "status": "ok", "detail": "R$ 3.691 / meta R$ 3.691"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Pagamento divida (Bradesco/Pai/Junia)", "status": "alerta", "detail": "Nao pago no mes"}, {"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 4.099"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 4.099 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+11.3% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "56/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 0"}]}], "resumo": "10/11"}, "insights": [{"text": "Bradesco nao pago em October: divida R$ 62.037 (500% do patrimonio).", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Quitar Bradesco libera R$ 4.469/mes — R$ 53.628/ano.", "bg": "#eff6ff", "border": "#93c5fd", "icon": "🎯"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Custo OK em October — margem R$ 806 abaixo do teto salario.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "11": {"label": "November / 2026", "cresc": {"pct": 10.16232691270744, "cor": "#16a34a", "barra": 100, "alvo": 50677.369900000005, "gap": 3523.9600999999966, "mont_atual": 54201.33}, "receitaExtra": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "receitaExtraAnt": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "labelAnt": "Oct/2026", "med": {"receita": 9674.7646, "fixas": 1927.6833333333334, "var": 2476.4971666666665, "divida": 983.5716666666667, "inv": 4287.0124333333315, "custo": 4404.1805}, "gastos": {"Fixas": 1829.72, "Lazer": 200.0, "Habitacao": 720.9, "Veiculo": 690.0, "Outros": 250.0}, "cartao": {"total": 0, "naoPago": 0, "top": [], "titulo": "", "cartoes": {}}, "comissao": {"liquidado": 0.0, "naoLiquidado": 656.51, "total": 656.51, "cobertura": 6.6}, "rec": 7789.969999999999, "cust": 3690.62, "div": 0.0, "inv": 4099.3499999999985, "fluxo": 0.0, "saldoMes": 4099.35, "score": 56, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 1.0}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": true, "custoPct": 100, "gapCusto4497": -806, "divMsg": "Bradesco nao pago — meta R$ 4.469/mes", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "Oct/26", "acumTotal": 7338.26, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 6058.72, "fgts": 484.69, "plano": 734.99, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 646.72, "total": 16952.579100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "10 de 11 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita vs plano NOV", "status": "ok", "detail": "R$ 7.790 / meta R$ 7.290"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "Sem lancamento no mes"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "ok", "detail": "R$ 3.691"}, {"label": "Custo do mes vs plano", "status": "ok", "detail": "R$ 3.691 / meta R$ 3.691"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Pagamento divida (Bradesco/Pai/Junia)", "status": "alerta", "detail": "Nao pago no mes"}, {"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 4.099"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 4.099 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+10.2% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "56/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 0"}]}], "resumo": "10/11"}, "insights": [{"text": "Bradesco nao pago em November: divida R$ 62.037 (500% do patrimonio).", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Quitar Bradesco libera R$ 4.469/mes — R$ 53.628/ano.", "bg": "#eff6ff", "border": "#93c5fd", "icon": "🎯"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Custo OK em November — margem R$ 806 abaixo do teto salario.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}, "12": {"label": "December / 2026", "cresc": {"pct": 9.224865884287341, "cor": "#16a34a", "barra": 100, "alvo": 55827.369900000005, "gap": 3373.9600999999966, "mont_atual": 59201.33}, "receitaExtra": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "receitaExtraAnt": {"dt": 0.0, "outros": 0.0, "total": 0.0}, "labelAnt": "Nov/2026", "med": {"receita": 10211.222514285715, "fixas": 1913.6885714285713, "var": 2388.554714285714, "divida": 843.0614285714286, "inv": 5065.917799999997, "custo": 4302.243285714285}, "gastos": {"Fixas": 1829.72, "Lazer": 200.0, "Habitacao": 720.9, "Veiculo": 690.0, "Outros": 250.0}, "cartao": {"total": 0, "naoPago": 0, "top": [], "titulo": "", "cartoes": {}}, "comissao": {"liquidado": 0.0, "naoLiquidado": 5987.45, "total": 5987.45, "cobertura": 59.9}, "rec": 13429.97, "cust": 3690.62, "div": 0.0, "inv": 9739.349999999999, "fluxo": 0.0, "saldoMes": 9739.35, "score": 56, "scoreItems": [{"name": "Saldo liquido", "pct": 0.20006418709749071}, {"name": "Custo de vida", "pct": 1.0}, {"name": "Patrimonio", "pct": 0.5910219047619047}, {"name": "Pagou divida", "pct": 0.0}, {"name": "Investiu", "pct": 1.0}, {"name": "Fluxo positivo", "pct": 1.0}], "custoOk": true, "custoPct": 100, "gapCusto4497": -806, "divMsg": "Bradesco nao pago — meta R$ 4.469/mes", "dt": {"total": 0, "totalMesAnterior": 0, "labelMesAnterior": "Nov/26", "acumTotal": 7338.26, "metaMes": 0, "rentab": 0.0, "coberturaMes": 0.0, "coberturaAnual": 12.2, "cobertura": 12.2, "cresc": 0.0, "pos": 0, "neg": 0, "labels": ["08/06", "09/06", "10/06", "11/06", "12/06", "15/06", "16/06", "17/06", "18/06", "19/06", "22/06", "23/06", "24/06", "25/06", "26/06", "29/06", "30/06"], "values": [-3657.08, 10995.34, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "rentabDiaria": [0.0, -300.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "dias": 0}, "dtPct": 0.0, "beneficios": {"salario": 6058.72, "fgts": 484.69, "plano": 734.99, "dec": 6626.14, "ferias": 8460.039100000002, "inss": 646.72, "total": 16952.579100000003}, "statusVoo": {"nivel": "alerta", "titulo": "Atencao — fora do planejado", "msg": "10 de 11 indicadores ok — revise os topicos abaixo.", "icon": "⚠", "checklist": [{"nome": "Receita", "itens": [{"label": "Receita vs plano DEZ", "status": "ok", "detail": "R$ 13.430 / meta R$ 13.000"}, {"label": "Receita extra (DT + Outros)", "status": "ok", "detail": "Sem lancamento no mes"}]}, {"nome": "Custos", "itens": [{"label": "Custo de vida do mes ate R$ 5.000", "status": "ok", "detail": "R$ 3.691"}, {"label": "Custo do mes vs plano", "status": "ok", "detail": "R$ 3.691 / meta R$ 3.691"}]}, {"nome": "Divida e fluxo", "itens": [{"label": "Pagamento divida (Bradesco/Pai/Junia)", "status": "alerta", "detail": "Nao pago no mes"}, {"label": "Sobra apos divida e investimento", "status": "ok", "detail": "Fluxo R$ 0"}, {"label": "Saldo apos custo e divida (planilha)", "status": "ok", "detail": "R$ 9.739"}]}, {"nome": "Investimento", "itens": [{"label": "Aporte no mes", "status": "ok", "detail": "R$ 9.739 / meta R$ 3.000"}]}, {"nome": "Evolucao", "itens": [{"label": "Crescimento patrimonial (+3%)", "status": "ok", "detail": "+9.2% / meta +3%"}, {"label": "Score financeiro", "status": "ok", "detail": "56/100"}, {"label": "DT operacional (nova fase)", "status": "ok", "detail": "Acumulado R$ 0"}]}], "resumo": "10/11"}, "insights": [{"text": "Bradesco nao pago em December: divida R$ 62.037 (500% do patrimonio).", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Historico DT 2026 (antes 08/06): R$ -157.261.", "bg": "#fef2f2", "border": "#fca5a5", "icon": "⚠"}, {"text": "Quitar Bradesco libera R$ 4.469/mes — R$ 53.628/ano.", "bg": "#eff6ff", "border": "#93c5fd", "icon": "🎯"}, {"text": "Hora R$ 32.20 — quitar R$ 62.037 = 1926h (8.8 meses de renda).", "bg": "#faf5ff", "border": "#d8b4fe", "icon": "⏱"}, {"text": "Custo OK em December — margem R$ 806 abaixo do teto salario.", "bg": "#f0fdf4", "border": "#86efac", "icon": "✓"}]}}, "static": {"divida0": 62037.39, "dividaBancaria": 26429.05, "dividaEmocional": 35608.33666666666, "bensCarro": 104000, "bensCasa": 230000, "parcelaBradesco": 4469, "patAtual": 12411.46, "saldoLiquido": -49625.93, "pctPnifAtual": 1.1820438095238095, "pnif": 1050000, "btg1": 11461.900500000003, "carteira": 16789.87, "contas": [{"nome": "Brasil", "val": 13549.97, "cor": "#2563eb"}, {"nome": "XP1", "val": 1879.9, "cor": "#7c3aed"}, {"nome": "XP2", "val": 0.0, "cor": "#a855f7"}, {"nome": "Inter", "val": 1360.0, "cor": "#16a34a"}, {"nome": "Bradesco", "val": 0.0, "cor": "#d97706"}, {"nome": "BTG2", "val": 0.0, "cor": "#0369a1"}], "metaPat": 674550, "metaDtMensal": 20400, "metaDtAnual": 60000, "metaDtDia": 1200, "dtEvolucao": {"labels": ["Jun/26", "Jul/26", "Aug/26", "Sep/26", "Oct/26", "Nov/26", "Dec/26"], "mensal": [7338.26, 0, 0, 0, 0, 0, 0], "acum": [7338.26, 7338.26, 7338.26, 7338.26, 7338.26, 7338.26, 7338.26], "rentab": [0.0, 0, 0, 0, 0, 0, 0], "metaMes": [20400.0, 0, 0, 0, 0, 0, 0], "coberturaMes": [36.0, 0, 0, 0, 0, 0, 0], "meses": [6, 7, 8, 9, 10, 11, 12], "metaAnual": 60000, "metaDia": 1200}, "comissaoEvol": {"labels": ["Jan/26", "Feb/26", "Mar/26", "Apr/26", "May/26", "Jun/26", "Jul/26", "Aug/26", "Sep/26", "Oct/26", "Nov/26", "Dec/26"], "meses": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "liquidado": [18594.31, 16594.78, 30776.53, 23597.47, 10496.56, 34371.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "naoLiquidado": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 16523.38, 10454.42, 16063.73, 42322.88, 656.51, 5987.45], "total": [18594.31, 16594.78, 30776.53, 23597.47, 10496.56, 34371.0, 16523.38, 10454.42, 16063.73, 42322.88, 656.51, 5987.45], "porMes": {"1": {"liquidado": 18594.31, "naoLiquidado": 0.0, "total": 18594.31, "cobertura": 185.9, "status": "liquidado"}, "2": {"liquidado": 16594.78, "naoLiquidado": 0.0, "total": 16594.78, "cobertura": 165.9, "status": "liquidado"}, "3": {"liquidado": 30776.53, "naoLiquidado": 0.0, "total": 30776.53, "cobertura": 307.8, "status": "liquidado"}, "4": {"liquidado": 23597.47, "naoLiquidado": 0.0, "total": 23597.47, "cobertura": 236.0, "status": "liquidado"}, "5": {"liquidado": 10496.56, "naoLiquidado": 0.0, "total": 10496.56, "cobertura": 105.0, "status": "liquidado"}, "6": {"liquidado": 34371.0, "naoLiquidado": 0.0, "total": 34371.0, "cobertura": 343.7, "status": "liquidado"}, "7": {"liquidado": 0.0, "naoLiquidado": 16523.38, "total": 16523.38, "cobertura": 165.2, "status": "aberto"}, "8": {"liquidado": 0.0, "naoLiquidado": 10454.42, "total": 10454.42, "cobertura": 104.5, "status": "aberto"}, "9": {"liquidado": 0.0, "naoLiquidado": 16063.73, "total": 16063.73, "cobertura": 160.6, "status": "aberto"}, "10": {"liquidado": 0.0, "naoLiquidado": 42322.88, "total": 42322.88, "cobertura": 423.2, "status": "aberto"}, "11": {"liquidado": 0.0, "naoLiquidado": 656.51, "total": 656.51, "cobertura": 6.6, "status": "aberto"}, "12": {"liquidado": 0.0, "naoLiquidado": 5987.45, "total": 5987.45, "cobertura": 59.9, "status": "aberto"}}, "metaMes": 10000, "media": 22405.11, "nMeses": 6}, "metaComissaoMes": 10000, "totalDtAnt": -157260.9724, "evX": ["Dez/25", "Jan/26", "Fev/26", "Mar/26", "Abr/26", "Mai/26", "Jun/26", "Jul/26", "Ago/26", "Set/26", "Out/26", "Nov/26", "Dez/26", "Jan/27", "Feb/27", "Mar/27", "Apr/27", "May/27", "Jun/27", "Jul/27", "Aug/27", "Sep/27", "Oct/27", "Nov/27", "Dec/27", "Jan/28", "Feb/28", "Mar/28", "Apr/28", "May/28", "Jun/28", "Jul/28", "Aug/28", "Sep/28", "Oct/28", "Nov/28", "Dec/28", "Jan/29", "Feb/29", "Mar/29", "Apr/29", "May/29", "Jun/29", "Jul/29", "Aug/29", "Sep/29", "Oct/29", "Nov/29", "Dec/29", "Jan/30", "Feb/30", "Mar/30", "Apr/30", "May/30", "Jun/30", "Jul/30", "Aug/30", "Sep/30", "Oct/30", "Nov/30", "Dec/30", "Jan/31", "Feb/31", "Mar/31", "Apr/31", "May/31", "Jun/31"], "evReal": [96336.0, 95912.32, 65154.0, 117097.63, 11827.26, 33867.58, 29201.329999999998, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "evProj": [null, null, null, null, null, null, null, 14525, 16653, 18795, 20951, 23122, 25307, 36445, 47657, 58944, 70306, 81743, 93257, 104848, 116516, 128262, 140086, 151989, 163971, 176033, 188176, 200399, 212704, 225091, 237561, 250113, 262750, 275471, 288276, 301167, 314144, 327207, 340357, 353595, 366922, 380337, 393841, 407436, 421121, 434898, 448766, 462727, 476781, 490928, 505170, 519507, 533939, 548468, 563093, 577816, 592637, 607557, 622577, 637696, 652916, 668238, 683662, 699189, 714819, 730554, 746393], "evMeta": [674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550, 674550], "barLabels": ["Dez/25", "Jan/26", "Fev/26", "Mar/26", "Abr/26", "Mai/26", "Jun/26", "Jul/26", "Ago/26", "Set/26", "Out/26", "Nov/26", "Dez/26"], "barReal": [96336, 95912, 65154, 117098, 11827, 33868, 29201, null, null, null, null, null, null], "barProj": [null, null, null, null, null, null, null, 34201, 39201, 44201, 49201, 54201, 59201], "planoRows": [{"mes": 7, "lbl": "JUL", "pok": 50, "status": "Atencao", "sc": "#d97706", "rec": 13549.97, "cust": 4270.463, "brad": 0.0, "inv": 9279.507, "sob": 0.0, "meta_brad": 4469}, {"mes": 8, "lbl": "AGO", "pok": 50, "status": "Atencao", "sc": "#d97706", "rec": 7904.0, "cust": 3721.34, "brad": 0.0, "inv": 4182.66, "sob": 0.0, "meta_brad": 4469}, {"mes": 9, "lbl": "SET", "pok": 50, "status": "Atencao", "sc": "#d97706", "rec": 7789.969999999999, "cust": 3725.62, "brad": 0.0, "inv": 4064.349999999999, "sob": 4.547473508864641e-13, "meta_brad": 4469}, {"mes": 10, "lbl": "OUT", "pok": 50, "status": "Atencao", "sc": "#d97706", "rec": 7789.969999999999, "cust": 3690.62, "brad": 0.0, "inv": 4099.3499999999985, "sob": 9.094947017729282e-13, "meta_brad": 4469}, {"mes": 11, "lbl": "NOV", "pok": 50, "status": "Atencao", "sc": "#d97706", "rec": 7789.969999999999, "cust": 3690.62, "brad": 0.0, "inv": 4099.3499999999985, "sob": 9.094947017729282e-13, "meta_brad": 4469}, {"mes": 12, "lbl": "DEZ", "pok": 50, "status": "Atencao", "sc": "#d97706", "rec": 13429.97, "cust": 3690.62, "brad": 0.0, "inv": 9739.349999999999, "sob": 0.0, "meta_brad": 4469}], "cartaoEvol": {"labels": ["Jan/26", "Feb/26", "Mar/26", "Apr/26", "May/26", "Jun/26", "Jul/26", "Aug/26", "Sep/26", "Oct/26", "Nov/26", "Dec/26"], "total": [8067.54, 7815.86, 5083.57, 13051.21, 5638.52, 2523.1, 0, 0, 0, 0, 0, 0], "naoPago": [0, 0.0, 86.1, 0.0, 0.0, 207.75, 0, 0, 0, 0, 0, 0], "meses": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}, "potencial": [["DT virar neutro", 26210, 157261, "#fef2f2", "#dc2626"], ["Comissao R$5k (+R$2k)", 2000, 24000, "#eff6ff", "#2563eb"], ["Nova fonte MEI R$1.5k", 1500, 18000, "#f5f3ff", "#7c3aed"], ["Quitar Bradesco", 4469, 53628, "#f0fdf4", "#16a34a"], ["Cortar variaveis", 500, 6000, "#fffbeb", "#d97706"]], "gerado": "09/06/2026 17:38"}};
+let chartEv, chartEvBar, chartPie, chartDT, chartCartao, chartComissao;
+
+function brl(v) {
+  const n = Math.round(Number(v)||0);
+  return 'R$\u00a0' + n.toLocaleString('pt-BR');
+}
+function brlSigned(v) {
+  const s = v >= 0 ? '+' : '';
+  return s + brl(Math.abs(v)).replace('R$\u00a0', v >= 0 ? 'R$\u00a0' : '-R$\u00a0');
+}
+function scoreColor(s) {
+  if (s >= 70) return ['#16a34a','Bom'];
+  if (s >= 50) return ['#d97706','Atencao'];
+  return ['#dc2626','Critico'];
+}
+function barColor(p) {
+  if (p >= 0.9) return '#16a34a';
+  if (p >= 0.6) return '#2563eb';
+  if (p >= 0.3) return '#d97706';
+  return '#dc2626';
+}
+function setCls(el, cls) {
+  el.classList.remove('up','dn');
+  if (cls) el.classList.add(cls);
+}
+
+function extraColor(t) {
+  if (t > 0) return '#16a34a';
+  if (t < 0) return '#dc2626';
+  return '#6b7280';
+}
+function extraRows(ex) {
+  const tAbs = Math.abs(ex.dt) + Math.abs(ex.outros) || Math.abs(ex.total) || 1;
+  const row = (nm, val) => {
+    const pct = Math.round(Math.abs(val) / tAbs * 100);
+    const c = val >= 0 ? '#16a34a' : '#dc2626';
+    const s = val > 0 ? '+' : '';
+    return '<div class="kpi-row"><span class="kpi-row-lbl">' + nm + '</span>'
+      + '<span class="kpi-row-val" style="color:' + c + '">' + s + brl(val)
+      + '<span class="kpi-row-pct">' + pct + '%</span></span></div>';
+  };
+  return row('DT', ex.dt) + row('Outros', ex.outros);
+}
+
+function renderChecklist(topics) {
+  let h = '<div class="status-checklist">';
+  topics.forEach(t => {
+    h += '<div class="status-topic"><div class="status-topic-title">' + t.nome + '</div>';
+    t.itens.forEach(it => {
+      const ic = it.status === 'ok' ? '✓' : '✗';
+      const det = it.detail ? '<span class="status-detail">' + it.detail + '</span>' : '';
+      h += '<div class="status-item ' + it.status + '"><span class="status-ic">' + ic + '</span>'
+         + '<span class="status-lbl">' + it.label + det + '</span></div>';
+    });
+    h += '</div>';
+  });
+  return h + '</div>';
+}
+
+function applyStatus(st) {
+  const b = document.getElementById('statusBanner');
+  b.className = 'status-banner status-' + st.nivel;
+  document.getElementById('statusIcon').textContent = st.icon;
+  document.getElementById('statusTitulo').textContent = st.titulo;
+  document.getElementById('statusMsg').textContent = st.msg;
+  document.getElementById('statusChecklist').innerHTML = renderChecklist(st.checklist);
+}
+
+function renderInsights(items) {
+  document.getElementById('insightsRow').innerHTML = items.map(it =>
+    '<div style="background:' + it.bg + ';border:1px solid ' + it.border + ';border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">' +
+    '<span style="font-size:18px">' + it.icon + '</span>' +
+    '<span style="font-size:12px;color:#374151;line-height:1.5">' + it.text + '</span></div>'
+  ).join('');
+}
+
+function gapCustoUi(gap) {
+  const box = document.getElementById('gapCustoBox');
+  if (gap > 0) {
+    box.style.background = '#fef2f2';
+    box.style.borderColor = '#fca5a5';
+    box.style.color = '#dc2626';
+    box.textContent = 'Gap atual: R$ ' + gap.toLocaleString('pt-BR')
+      + ' — cortar R$ ' + gap.toLocaleString('pt-BR') + ' nas variaveis fecha o orcamento';
+  } else {
+    box.style.background = '#f0fdf4';
+    box.style.borderColor = '#86efac';
+    box.style.color = '#16a34a';
+    box.textContent = 'Dentro da meta — margem de R$ ' + Math.abs(gap).toLocaleString('pt-BR')
+      + ' abaixo do teto de R$ 4.497';
+  }
+}
+
+function applyMes(mes) {
+  const m = EVOLUCAO.byMes[String(mes)];
+  if (!m) return;
+  const c = m.cresc;
+  const ex = m.receitaExtra;
+  document.getElementById('selMes').value = mes;
+
+  document.getElementById('kpiCrescLbl').innerHTML = (c.pct >= 0 ? '+' : '') + c.pct.toFixed(1) + '%<span style="color:#9ca3af;font-weight:400"> / +3%</span>';
+  document.getElementById('kpiCrescLbl').style.color = c.cor;
+  document.getElementById('kpiCrescBar').style.width = c.barra.toFixed(0) + '%';
+  document.getElementById('kpiCrescBar').style.background = c.cor;
+  document.getElementById('kpiAlvo').textContent = brl(c.alvo);
+  document.getElementById('kpiGapMeta').textContent = (c.gap >= 0 ? '+' : '') + brl(c.gap);
+  document.getElementById('kpiGapMeta').style.color = c.cor;
+
+  const exEl = document.getElementById('kpiExtra');
+  const exT = ex.total;
+  exEl.textContent = (exT > 0 ? '+' : '') + brl(exT);
+  exEl.style.color = extraColor(exT);
+  document.getElementById('kpiExtraRows').innerHTML = extraRows(ex);
+  document.getElementById('kpiExtraAntRows').innerHTML = extraRows(m.receitaExtraAnt || {});
+  document.getElementById('kpiExtraAntLabel').textContent = m.labelAnt || '';
+
+  const ben = m.beneficios || {};
+  const fmtBen = v => v && v > 0 ? brl(v) : '—';
+  document.getElementById('benSalario').textContent = fmtBen(ben.salario);
+  document.getElementById('benFgts').textContent    = fmtBen(ben.fgts);
+  document.getElementById('benPlano').textContent   = fmtBen(ben.plano);
+  document.getElementById('benDec').textContent     = fmtBen(ben.dec);
+  document.getElementById('benFerias').textContent  = fmtBen(ben.ferias);
+  document.getElementById('benInss').textContent    = fmtBen(ben.inss);
+  document.getElementById('benTotal').textContent   = fmtBen(ben.total);
+
+  applyStatus(m.statusVoo);
+  renderInsights(m.insights);
+
+  const kCusto = document.getElementById('kpiCusto');
+  kCusto.textContent = brl(m.med.custo);
+  setCls(kCusto, m.custoOk ? 'up' : 'dn');
+  document.getElementById('kpiCustoSub').innerHTML = 'Meta R$ 5.000 &nbsp;|&nbsp; <span class="' + (m.custoOk ? 'up' : 'dn') + '">' + (m.custoOk ? 'OK' : 'Acima R$' + Math.round(m.med.custo - 5000)) + '</span>';
+  document.getElementById('kpiCustoPctLbl').textContent = Math.round(m.custoPct) + '%';
+  document.getElementById('kpiCustoBar').style.width = Math.round(m.custoPct) + '%';
+  document.getElementById('kpiCustoBar').style.background = m.custoOk ? '#16a34a' : '#d97706';
+  const custoMesEl = document.getElementById('kpiCustoMesAtual');
+  custoMesEl.textContent = brl(m.cust);
+  custoMesEl.style.color = m.cust <= 5000 ? '#16a34a' : '#dc2626';
+
+  const [scC, scL] = scoreColor(m.score);
+  document.getElementById('kpiScore').textContent = m.score;
+  document.getElementById('kpiScore').style.color = scC;
+  document.getElementById('kpiScoreLbl').textContent = scL;
+  document.getElementById('kpiScoreLbl').style.color = scC;
+  document.getElementById('scoreBars').innerHTML = m.scoreItems.map(it => {
+    const p = Math.round(it.pct * 100);
+    return '<div class="score-mini"><div class="score-mini-lbl"><span>' + it.name + '</span><span style="font-weight:600;color:#374151">' + p + '%</span></div><div class="score-mini-bar"><div style="width:' + Math.min(p,100) + '%;height:100%;background:' + barColor(it.pct) + ';border-radius:2px"></div></div></div>';
+  }).join('');
+
+  const sm = m.saldoMes;
+  document.getElementById('kpiSaldoMes').textContent = (sm >= 0 ? '+' : '') + brl(sm);
+  document.getElementById('kpiSaldoMes').style.color = sm >= 0 ? '#16a34a' : '#dc2626';
+  const aloc = m.div + m.inv;
+  document.getElementById('kpiAlocLbl').textContent = brl(aloc);
+  document.getElementById('kpiAlocBar').style.width = (sm > 0 ? Math.min(aloc / sm * 100, 100) : 0).toFixed(0) + '%';
+  document.getElementById('kpiSobra').textContent = (m.fluxo >= 0 ? '+' : '') + brl(m.fluxo);
+  document.getElementById('kpiSobra').style.color = m.fluxo >= 0 ? '#16a34a' : '#dc2626';
+
+  document.getElementById('fluxoRec').textContent = brl(m.rec);
+  document.getElementById('fluxoCust').textContent = brl(m.cust);
+  document.getElementById('fluxoDisp').textContent = (sm >= 0 ? '+' : '') + brl(sm);
+  document.getElementById('fluxoInv').textContent = brl(m.inv);
+  document.getElementById('fluxoDivVal').textContent = brl(m.div);
+  document.getElementById('fluxoDivMsg').textContent = m.divMsg;
+  document.getElementById('fluxoDivBar').style.width = Math.min(m.div / 6207 * 100, 100).toFixed(0) + '%';
+  const fBox = document.getElementById('fluxoSobraBox');
+  fBox.style.background = m.fluxo >= 0 ? '#f0fdf4' : '#fef2f2';
+  fBox.style.borderColor = m.fluxo >= 0 ? '#86efac' : '#fca5a5';
+  document.getElementById('fluxoSobra').textContent = (m.fluxo >= 0 ? '+' : '') + brl(m.fluxo);
+  document.getElementById('fluxoSobra').style.color = m.fluxo >= 0 ? '#16a34a' : '#dc2626';
+
+  gapCustoUi(m.gapCusto4497);
+  document.getElementById('pieTotal').textContent = brl(m.cust);
+  document.getElementById('pieMesLbl').textContent = '— ' + m.label;
+
+  const gastosKeys = ["Fixas", "Lazer", "Habitacao", "Veiculo", "Outros"];
+  const gastosColors = {"Fixas": "#6366f1", "Lazer": "#2563eb", "Habitacao": "#16a34a", "Veiculo": "#d97706", "Outros": "#9ca3af"};
+  const custoTotal = m.cust || 1;
+  document.getElementById('gastosLegend').innerHTML = gastosKeys.map(k => {
+    const v = (m.gastos && m.gastos[k]) || 0;
+    const pct = Math.round(v / custoTotal * 100);
+    return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + gastosColors[k] + ';margin-right:4px;vertical-align:middle"></span>' + k + '</span><span style="font-weight:600">' + brl(v) + '<span style="color:#9ca3af;font-weight:400"> ' + pct + '%</span></span></div><div style="background:#f3f4f6;border-radius:3px;height:4px;overflow:hidden"><div style="width:' + pct + '%;height:100%;background:' + gastosColors[k] + ';border-radius:3px"></div></div></div>';
+  }).join('');
+
+  if (chartPie) {
+    chartPie.data.labels = gastosKeys;
+    chartPie.data.datasets[0].data = gastosKeys.map(k => Math.round((m.gastos && m.gastos[k]) || 0));
+    chartPie.data.datasets[0].backgroundColor = gastosKeys.map(k => gastosColors[k]);
+    chartPie.update();
+  }
+
+  const dtAntVal = m.dt.totalMesAnterior || 0;
+  document.getElementById('dtAcum').textContent = brl(dtAntVal);
+  document.getElementById('dtAcum').style.color = dtAntVal >= 0 ? '#16a34a' : '#dc2626';
+  document.getElementById('dtMesAntLabel').textContent = m.dt.labelMesAnterior || 'mês ant.';
+  const dtRentab = m.dt.rentab ?? 0;
+  document.getElementById('dtRentab').textContent = (dtRentab * 100).toFixed(1) + '%';
+  document.getElementById('dtRentab').style.color = dtRentab >= 0 ? '#16a34a' : '#dc2626';
+  document.getElementById('dtCobMes').textContent = (m.dt.coberturaMes ?? 0) + '%';
+  document.getElementById('dtMetaMesLbl').textContent = brl(m.dt.metaMes ?? 0);
+  document.getElementById('dtCobAnual').textContent = (m.dt.coberturaAnual ?? 0) + '%';
+  const dtCresc = m.dt.cresc ?? 0;
+  document.getElementById('dtCresc').textContent = dtCresc.toFixed(1) + '%';
+  document.getElementById('dtCresc').style.color = dtCresc >= 100 ? '#16a34a' : dtCresc >= 50 ? '#d97706' : '#dc2626';
+  document.getElementById('dtAcumTotal').textContent = brl(m.dt.acumTotal ?? 0);
+  document.getElementById('dtGL').textContent = (m.dt.pos ?? 0) + 'd/' + (m.dt.neg ?? 0) + 'd';
+  if (chartDT) {
+    const de = EVOLUCAO.static.dtEvolucao;
+    const idx = (de.meses || []).indexOf(mes);
+    chartDT.setActiveElements(idx >= 0 ? [{datasetIndex: 0, index: idx}, {datasetIndex: 1, index: idx}] : []);
+    chartDT.update();
+  }
+
+  const cc = m.cartao || {total: 0, naoPago: 0, top: [], titulo: ''};
+  document.getElementById('ccMesLbl').textContent = m.label;
+  document.getElementById('ccTitulo').textContent = cc.titulo || 'Sem bloco na aba Divida para este mes';
+  document.getElementById('ccNaoPago').textContent = brl(cc.naoPago);
+  document.getElementById('ccNaoPago').style.color = cc.naoPago === 0 ? '#16a34a' : '#dc2626';
+  document.getElementById('ccTotal').textContent = brl(cc.total);
+  document.getElementById('ccTop').innerHTML = cc.top && cc.top.length
+    ? cc.top.map(t => t.nome + ': ' + brl(t.val)).join(' &bull; ')
+    : '<span style="color:#9ca3af">Nenhum item devedor (todos antecipados ou sem fatura)</span>';
+  if (chartCartao) {
+    const ce = EVOLUCAO.static.cartaoEvol;
+    const mesChart = cc.mesGastos || mes;
+    const idx = (ce.meses || []).indexOf(mesChart);
+    chartCartao.setActiveElements(idx >= 0 ? [{datasetIndex: 0, index: idx}, {datasetIndex: 1, index: idx}] : []);
+    chartCartao.update();
+  }
+
+  const cm = m.comissao || {total:0, liquidado:0, naoLiquidado:0, cobertura:0};
+  document.getElementById('comTotal').textContent = brl(cm.total);
+  document.getElementById('comLiq').textContent = brl(cm.liquidado);
+  document.getElementById('comAberto').textContent = brl(cm.naoLiquidado);
+  document.getElementById('comCob').textContent = (cm.cobertura || 0) + '%';
+  document.getElementById('comCob').style.color = (cm.cobertura || 0) >= 100 ? '#16a34a' : '#d97706';
+  if (chartComissao) {
+    const co = EVOLUCAO.static.comissaoEvol;
+    const idx = (co.meses || []).indexOf(mes);
+    chartComissao.setActiveElements(idx >= 0 ? [{datasetIndex: 0, index: idx}, {datasetIndex: 1, index: idx}] : []);
+    chartComissao.update();
+  }
+
+  document.querySelectorAll('#plano tbody tr').forEach(tr => {
+    const pm = parseInt(tr.dataset.mes, 10);
+    tr.style.background = pm === mes ? '#eff6ff' : '';
+    const lbl = tr.querySelector('.plano-lbl');
+    lbl.innerHTML = lbl.dataset.base + (pm === mes ? '&nbsp;◀' : '');
+  });
+
+  if (history.replaceState) {
+    const url = new URL(window.location);
+    url.searchParams.set('mes', mes);
+    history.replaceState(null, '', url);
+  }
+}
+
+Chart.defaults.font.family = "'Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#6b7280';
+
+(function initCharts() {
+  const s = EVOLUCAO.static;
+  const splitIdx = 7;
+  const bgPlugin = {
+    id: 'splitBg',
+    beforeDraw(chart) {
+      const {ctx, chartArea: {top, bottom, left, right}, scales: {x}} = chart;
+      if (!x) return;
+      const splitX = x.getPixelForValue(splitIdx);
+      ctx.save();
+      ctx.fillStyle = 'rgba(37,99,235,.03)';
+      ctx.fillRect(left, top, splitX - left, bottom - top);
+      ctx.fillStyle = 'rgba(22,163,74,.03)';
+      ctx.fillRect(splitX, top, right - splitX, bottom - top);
+      ctx.restore();
+    }
+  };
+  chartEv = new Chart(document.getElementById('cEv'), {
+    type: 'line', plugins: [bgPlugin],
+    data: {
+      labels: s.evX,
+      datasets: [
+        {label: 'Historico Real', data: s.evReal, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.08)', tension: .4, fill: true, pointRadius: 2},
+        {label: 'Projecao', data: s.evProj, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,.06)', tension: .4, fill: true, pointRadius: 0},
+        {label: 'Meta', data: s.evMeta, borderColor: '#d97706', borderDash: [6,4], pointRadius: 0, borderWidth: 1.5}
+      ]
+    },
+    options: { plugins: {legend: {display: false}}, scales: { y: {ticks: {callback: v => 'R$' + (v/1000).toFixed(0) + 'k'}} } }
+  });
+  const barReal = s.barReal.map((v,i) => v != null ? v : null);
+  chartEvBar = new Chart(document.getElementById('cEvBar'), {
+    type: 'bar',
+    data: {
+      labels: s.barLabels,
+      datasets: [
+        {data: barReal, backgroundColor: barReal.map(v => v != null ? '#2563eb' : 'rgba(0,0,0,0)'), borderRadius: 4},
+        {data: s.barProj, backgroundColor: s.barProj.map(v => v != null ? '#d97706' : 'rgba(0,0,0,0)'), borderRadius: 4}
+      ]
+    },
+    options: { plugins: {legend: {display: false}}, scales: { y: {ticks: {callback: v => 'R$' + (v/1000).toFixed(0) + 'k'}} } }
+  });
+  const co = s.comissaoEvol;
+  const metaCom = [].concat(co.labels || []).map(() => s.metaComissaoMes);
+  chartComissao = new Chart(document.getElementById('cComissao'), {
+    type: 'bar',
+    data: {
+      labels: co.labels || [],
+      datasets: [
+        { label: 'Liquidado', data: co.liquidado || [], backgroundColor: '#2563eb', borderRadius: 4, stack: 'c' },
+        { label: 'A receber', data: co.naoLiquidado || [], backgroundColor: '#d97706', borderRadius: 4, stack: 'c' },
+        { label: 'Meta 10k', data: metaCom, type: 'line', borderColor: '#9ca3af', borderDash: [5,4],
+          pointRadius: 0, borderWidth: 1.5, fill: false }
+      ]
+    },
+    options: {
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, ticks: { callback: v => 'R$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v) } }
+      }
+    }
+  });
+  const dm = EVOLUCAO.byMes[String(EVOLUCAO.defaultMes)];
+  const gastosKeys = ["Fixas", "Lazer", "Habitacao", "Veiculo", "Outros"];
+  const gastosColors = {"Fixas": "#6366f1", "Lazer": "#2563eb", "Habitacao": "#16a34a", "Veiculo": "#d97706", "Outros": "#9ca3af"};
+  chartPie = new Chart(document.getElementById('cPie'), {
+    type: 'doughnut',
+    data: {
+      labels: gastosKeys,
+      datasets: [{ data: gastosKeys.map(k => Math.round((dm.gastos && dm.gastos[k]) || 0)),
+        backgroundColor: gastosKeys.map(k => gastosColors[k]), borderWidth: 0 }]
+    },
+    options: { cutout: '70%', plugins: { legend: { display: false } } }
+  });
+  chartDT = new Chart(document.getElementById('cDT'), {
+    type: 'bar',
+    data: {
+      labels: s.dtEvolucao.labels,
+      datasets: [
+        { label: 'Resultado mensal', data: s.dtEvolucao.mensal,
+          backgroundColor: s.dtEvolucao.mensal.map(v => v > 0 ? '#86efac' : v < 0 ? '#fca5a5' : '#e5e7eb'),
+          borderRadius: 3, yAxisID: 'y' },
+        { label: 'Acumulado', data: s.dtEvolucao.acum, type: 'line',
+          borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.08)', tension: 0.3,
+          fill: true, pointRadius: 3, yAxisID: 'y' },
+        { label: 'Meta 60k', data: s.dtEvolucao.labels.map(() => s.dtEvolucao.metaAnual),
+          type: 'line', borderColor: '#d97706', borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5, yAxisID: 'y' }
+      ]
+    },
+    options: {
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+      scales: {
+        y: { ticks: { callback: v => 'R$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v) } }
+      }
+    }
+  });
+  const ce = s.cartaoEvol;
+  chartCartao = new Chart(document.getElementById('cCartao'), {
+    type: 'line',
+    data: {
+      labels: ce.labels,
+      datasets: [
+        { label: 'Fatura total', data: ce.total, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.08)',
+          tension: 0.3, fill: true, pointRadius: 4, pointHoverRadius: 6 },
+        { label: 'Devedor', data: ce.naoPago, borderColor: '#991b1b', borderDash: [5, 4],
+          backgroundColor: 'transparent', tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5 }
+      ]
+    },
+    options: {
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+      scales: { y: { ticks: { callback: v => 'R$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v) } } }
+    }
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const mesUrl = params.get('mes');
+  const mesInit = mesUrl && EVOLUCAO.byMes[mesUrl] ? +mesUrl : EVOLUCAO.defaultMes;
+  applyMes(mesInit); // sempre aplica para garantir consistencia JS/HTML
+})();
+</script>
+</body>
+</html>

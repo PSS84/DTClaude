@@ -1,7 +1,27 @@
-# Documentacao local (nao versionar)
-/README.md
-/manual/README.md
+# Dados financeiros — NUNCA versionar
+dados/
+*.xlsx
+*.xls
+*.csv
+
+# Scripts locais (rodam só no PC)
+scripts_py/
+irpf/
+dados_diario/
+
+# Claude workspace
+.claude/
 
 # Artefatos locais comuns
 __pycache__/
 *.pyc
+*.pyo
+
+# Variaveis de ambiente e segredos — NUNCA versionar
+.env
+*.env
+.env.*
+
+# Documentacao local
+/README.md
+/manual/
